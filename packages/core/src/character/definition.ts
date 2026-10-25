@@ -62,7 +62,7 @@ const pick = <T extends string>(v: unknown, allowed: T[], fallback: T): T =>
   allowed.includes(v as T) ? (v as T) : fallback;
 // Colours end up in SVG attributes, so anything that isn't a plain colour token is rejected.
 const COLOR_RE = /^(#[0-9a-f]{3,8}|[a-z]+|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%deg]+\))$/i;
-const validColor = (v: unknown) => (typeof v === 'string' && COLOR_RE.test(v.trim()) ? v.trim() : null);
+export const validColor = (v: unknown): string | null => (typeof v === 'string' && COLOR_RE.test(v.trim()) ? v.trim() : null);
 const color = (v: unknown, fallback: string) => validColor(v) ?? fallback;
 const optColor = (v: unknown, fallback: string | null) => (v === null ? null : validColor(v) ?? fallback);
 

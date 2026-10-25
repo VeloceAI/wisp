@@ -76,6 +76,23 @@ Shapes: `wisp`, `round`, `squircle`, `blob`, `bean`. Eyes: `classic`, `dot`, `sp
 
 Moods: idle, waking, thinking, talking, happy, excited, celebrate, confused, worried, sleepy, sleeping, shy. It blinks, breathes, follows the cursor, giggles when tapped, sleeps when the visitor is idle, and keeps still for people who turn on reduced motion.
 
+## Size and style
+
+```json
+"size": "large",
+"theme": { "accent": "#E2552B", "font": "Poppins, sans-serif", "radius": 8, "mode": "auto", "chatWidth": 400 }
+```
+
+- `size`: `"small"`, `"medium"` (default), `"large"`, a number of pixels (48 to 240), or per screen: `{ "desktop": "large", "phone": "small" }`. A plain number shrinks to 75% on phones.
+- `theme.accent`: colour for buttons, highlights and the visitor's messages (defaults to the character's colour).
+- `theme.paper`, `theme.ink`: background and text colour of the bubble and chat.
+- `theme.font`, `theme.fontSize`.
+- `theme.radius`: corner roundness, from 0 (square) to 28.
+- `theme.mode`: `"auto"` follows the visitor's light/dark setting.
+- `theme.chatWidth`, `theme.chatHeight`.
+
+Changing these never changes behaviour. Placement, phone corners, avoiding buttons and the chat position all work from the size you set, and the chat always fits above the character. Styles live inside Wisp's own shadow DOM, so they can't affect your page and your page can't break them.
+
 ## Languages
 
 Built-in lines are in English, Hindi and Hinglish. The visitor's language is picked up from what they type. Add any other language by writing your FAQ, tips and lines with that code (`{ "ta": "…" }`) and button labels under `"ui"`; list them in `"languages"` to show them in settings.

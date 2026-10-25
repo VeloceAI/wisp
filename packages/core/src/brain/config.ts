@@ -77,6 +77,9 @@ export interface GuideConfig {
   /** Minimum gap between tips the visitor didn't ask for. */
   tipGapMs?: number;
   siteName?: string;
+  /** "small" | "medium" | "large" | pixels, or different values per screen: `{ "desktop": 120, "phone": "small" }`. */
+  size?: GuideSize | { desktop?: GuideSize; phone?: GuideSize };
+  theme?: GuideTheme;
   /** Areas the guide never reads or touches: CSS selectors, and URL paths such as "/admin*". */
   blocked?: { selectors?: string[]; paths?: string[] };
   /** Things the guide may do directly; it prefers these over clicking around. */
@@ -88,6 +91,23 @@ export interface GuideConfig {
    * "browser" uses the built-in voice; "ai" uses the proxy's natural voice and falls back to the browser.
    */
   voice?: false | { mode?: 'browser' | 'ai'; clips?: Record<string, string> };
+}
+
+export type GuideSize = 'small' | 'medium' | 'large' | number;
+
+export interface GuideTheme {
+  /** Buttons, highlights and your messages. Defaults to the character's shade colour. */
+  accent?: string;
+  /** Bubble and chat background, and their text colour. Setting these turns off automatic dark mode for them. */
+  paper?: string;
+  ink?: string;
+  font?: string;
+  fontSize?: number;
+  /** Corner roundness in pixels, 0 (square) to 28. */
+  radius?: number;
+  mode?: 'auto' | 'light' | 'dark';
+  chatWidth?: number;
+  chatHeight?: number;
 }
 
 export interface Button {

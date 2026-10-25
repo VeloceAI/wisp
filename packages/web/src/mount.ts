@@ -20,6 +20,7 @@ import { ChatView } from './ui/chat';
 import { buttonRow, h } from './ui/dom';
 import { clamp, coversInteractive, dockBox, isPhone, placeGuide, type Box, type Corner } from './ui/placement';
 import { STYLES } from './ui/styles';
+import { applyTheme, resolveSize } from './ui/theme';
 import { watchInput } from './watch/input';
 import { cssEscape, safeQueryAll, watchSections } from './watch/sections';
 import { browserStore } from './storage';
@@ -100,8 +101,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const tab = h('button', { type: 'button', class: `tab ${corner === 'bottom-left' ? 'left' : 'right'}`, hidden: true, onclick: () => guide.dispatch({ type: 'show' }) });
   const chat = new ChatView(guide, (v) => guide.dispatch({ type: 'button', value: v }), voice);
   const layer = h('div', { class: 'layer' }, highlight, figure, bubble, chat.el, tab);
-  layer.style.setProperty('--wisp-accent', def.body.shade);
-  layer.style.setProperty('--wisp-soft', def.body.glow + '66');
+  applyTheme(layer, config, def);
   shadow.append(h('style', {}, STYLES), layer);
   (opts.parent ?? doc.body).append(host);
   reader.setHost(host);
@@ -125,7 +125,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     layoutQueued = false;
     const vw = doc.documentElement.clientWidth || win.innerWidth;
     const vh = win.innerHeight;
-    size = isPhone(vw) ? 84 : 112;
+    size = resolveSize(config.size, isPhone(vw));
     layer.style.setProperty('--wisp-size', `${size}px`);
     const targetEl = state.chatOpen ? null : resolve(state.anchor);
     const placed = state.chatOpen
@@ -165,7 +165,10 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const placeChat = (vw: number, vh: number) => {
     if (chat.el.hidden) return;
     const s = chat.el.style;
-    s.bottom = `${vh - box.y + 8}px`;
+    const bottom = vh - box.y + 8;
+    s.bottom = `${bottom}px`;
+    // A big character pushes the panel up; cap its height so the header never goes off-screen.
+    s.maxHeight = `${Math.max(200, vh - bottom - 12)}px`;
     if (isPhone(vw)) {
       s.left = '12px';
       s.right = 'auto';
