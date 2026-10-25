@@ -63,11 +63,14 @@ export class FaqChat implements Answerer {
   }
 
   suggestions(lang: Lang, count = 3, exclude: string[] = []): Button[] {
-    return this.order
+    return [...this.extra(lang), ...this.order
       .filter((id) => !exclude.includes(id))
       .slice(0, count)
-      .map((id) => ({ label: this.question(id, lang), value: id }));
+      .map((id) => ({ label: this.question(id, lang), value: id }))];
   }
+
+  /** Tap-to-run buttons for the site's declared actions (set by the guide). */
+  extra: (lang: Lang) => Button[] = () => [];
 
   faqAnswer(id: string, lang: Lang): ChatAnswer | null {
     const f = this.faq.get(id);

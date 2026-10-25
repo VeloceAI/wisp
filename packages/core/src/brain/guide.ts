@@ -5,6 +5,7 @@ import { GuideMemory, InMemoryStore, type KeyValueStore } from '../memory/memory
 import type { Button, GuideConfig, HelpLevel } from './config';
 import { detectLang, langFromLocale, type Localized } from './lang';
 import { Lines, toLineSet, uiText, type UiStringKey } from './lines';
+import type { ActionRunner } from '../actions/runner';
 import { answerPageQuestion, pageFallback, type PageSource } from './page-chat';
 import { reactToApp } from './reactions';
 import { TourRunner } from './tour';
@@ -72,6 +73,7 @@ export class Guide {
   private tour: TourRunner;
   private random: () => number;
   page: PageSource | null;
+  actions: ActionRunner | null = null;
 
   constructor(config: GuideConfig = {}, deps: GuideDeps = {}) {
     this.config = config;
@@ -101,6 +103,7 @@ export class Guide {
       lang,
       helpLevel: this.memory.get('helpLevel'),
       voice: config.voice !== false && this.memory.get('voice'),
+      acting: null,
       tour: null,
     };
     this.tour = new TourRunner(this, config.tour ?? []);
@@ -356,6 +359,10 @@ export class Guide {
       if (detected !== this.state.lang) this.patch({ lang: detected });
     }
     this.patch({ chatOpen: true, busy: true, messages: [...this.state.messages, { from: 'user', text: question }] });
+    if (this.actions && (await this.actions.handle(question))) {
+      this.patch({ busy: false });
+      return;
+    }
     this.feel('thinking', 20000);
     let answer: ChatAnswer | null = this.page ? answerPageQuestion(this, this.page, question) : null;
     if (!answer) {
@@ -383,6 +390,8 @@ export class Guide {
     if (value === 'chat:open') return this.openChat();
     if (value.startsWith('tour:')) return this.tour.handle(value.slice(5));
     if (value.startsWith('link:')) return this.cue({ type: 'link', href: value.slice(5) });
+    if (value.startsWith('act:')) return this.actions?.button(value);
+    if (value.startsWith('run:')) return void this.actions?.run({ goal: value.slice(4), steps: [{ kind: 'tool', name: value.slice(4) }] });
     if (value.startsWith('point:')) return this.pointAt(`ref:${value.slice(6)}`);
     if (value.startsWith('faq:')) {
       const answer = this.faq.faqAnswer(value, this.state.lang);
@@ -457,7 +466,7 @@ export class Guide {
   }
 
   private goDrowsy(mood: 'sleepy' | 'sleeping'): void {
-    if (this.state.chatOpen || this.state.tour || this.state.busy || this.loading) {
+    if (this.state.chatOpen || this.state.tour || this.state.busy || this.state.acting || this.loading) {
       this.resetIdle();
       return;
     }

@@ -2,6 +2,7 @@ import type { CharacterInput } from '../character/definition';
 import type { Mood } from '../character/moods';
 import type { Lang, Localized } from './lang';
 import type { UiOverrides } from './lines';
+import type { SiteActionDecl } from '../actions/types';
 
 export type HelpLevel = 'auto' | 'lots' | 'tips';
 
@@ -78,6 +79,8 @@ export interface GuideConfig {
   siteName?: string;
   /** Areas the guide never reads or touches: CSS selectors, and URL paths such as "/admin*". */
   blocked?: { selectors?: string[]; paths?: string[] };
+  /** Things the guide may do directly; it prefers these over clicking around. */
+  actions?: SiteActionDecl[];
   /** Your Wisp proxy (keeps the AI key on your server). Without it, chat uses keyword answers. */
   ai?: { endpoint: string; timeoutMs?: number; maxCalls?: number };
   /**

@@ -47,9 +47,9 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - [x] Explain page, find + point (scroll, highlight, guide moves beside), answer from page text (AI and non-AI)
 
 ## Step 4 — actions
-- [ ] Site-declared actions (tool-style) + generic DOM actions (click, type, select, scroll, navigate, press)
-- [ ] Rule planner (no AI) + AI planner (JSON plan)
-- [ ] Executor: step-by-step narration, highlight, Stop button, confirm before final steps, refuse sensitive fields/blocked areas, resume after navigation
+- [x] Site-declared actions (tool-style) + generic DOM actions (click, type, select, scroll, navigate, press)
+- [x] Rule planner (no AI) + AI planner (JSON plan)
+- [x] Executor: step-by-step narration, highlight, Stop button, confirm before final steps, refuse sensitive fields/blocked areas, resume after navigation
 
 ## Step 5 — Expo / React Native renderer
 ## Step 6 — adaptive memory + owner report
@@ -77,3 +77,10 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - Tests: 76 passing; values of password/card fields proven absent from the model.
 - Browser check: "what's on this page?" summary and "password field kahan hai" pointing on the demo.
 - Fixed: summary listed product cards as sections; now uses top-level headings only.
+
+### Step 4 (2026-10-25)
+- Shipped: action step types, rule planner (en + Hinglish: search with price limit, sort, add to cart, click/open, scroll, type, select, declared actions), AI planner via proxy `/plan` with strict validation against real refs and declared names, ActionRunner (narrate, highlight, Stop, confirm before final, refuse private fields and blocked pages, resume after navigation), DomDriver (framework-safe typing, option matching, search vs real form submits), `registerAction` / `wisp:run`, tap-to-run action buttons.
+- Tests: 86 passing, including confirm Yes/No, Stop mid-run, password refusal, declared final action.
+- Browser check: the brief's example ran on the demo shop end to end.
+- Fixed: demo shop search matched literally; now matches words.
+- Next: step 5 (Expo renderer) and step 6 (adaptive memory, owner report) in a later session.

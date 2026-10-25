@@ -30,6 +30,7 @@ const SYNONYMS: Record<string, string> = {
   sasta: 'cheap', saste: 'cheap', सस्ता: 'cheap',
   samay: 'time', time: 'time', samai: 'time', समय: 'time', long: 'time', soon: 'time', fast: 'time', quickly: 'time',
   din: 'days', days: 'days', day: 'days', दिन: 'days',
+  maximum: 'max', minimum: 'min', upto: 'max',
   contact: 'contact', sampark: 'contact', संपर्क: 'contact', phone: 'contact', email: 'contact',
 };
 

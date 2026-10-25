@@ -10,6 +10,9 @@ import {
   type KeyValueStore,
   type Mood,
   type PageModel,
+  type SiteActionHandler,
+  ActionRunner,
+  localize,
   type TrackEvent,
 } from '@veloceai/wisp-core';
 import { SvgRenderer } from './render/svg';
@@ -23,6 +26,8 @@ import { browserStore } from './storage';
 import { connectAI, visitorId } from './ai';
 import { WebVoice } from './voice';
 import { PageReader } from './page/reader';
+import { DomDriver } from './actions/driver';
+import { proxyPlanner } from './ai';
 
 export interface MountOptions {
   /** Where the host element goes. Defaults to document.body. */
@@ -40,6 +45,11 @@ export interface WispInstance {
   say(text: string, mood?: Mood): void;
   /** What the guide currently understands about the page. */
   read(): PageModel;
+  /** Carry out an instruction, e.g. "search red dresses under 2000 and sort by price". */
+  run(instruction: string): Promise<boolean>;
+  /** Handle a declared action yourself instead of receiving a `wisp:run` event. */
+  registerAction(name: string, handler: SiteActionHandler): void;
+  stop(): void;
   openChat(): void;
   startTour(): void;
   hide(): void;
@@ -59,6 +69,15 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const reader = new PageReader(doc, { blockedSelectors: config.blocked?.selectors, blockedPaths: config.blocked?.paths });
   guide.page = reader;
   if (!opts.answerer) connectAI(guide, store);
+  const driver = new DomDriver(reader, () => config.actions ?? []);
+  const actions = new ActionRunner(guide, driver, {
+    store: browserStore('sessionStorage'),
+    aiPlanner: config.ai?.endpoint ? proxyPlanner(config.ai.endpoint, visitorId(store)) : undefined,
+    stepDelayMs: win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 250 : 700,
+  });
+  guide.actions = actions;
+  guide.faq.extra = (lang) =>
+    (config.actions ?? []).filter((a) => a.button).map((a) => ({ label: localize(a.button, lang), value: `run:${a.name}` }));
   const voice =
     config.voice === false
       ? null
@@ -268,17 +287,22 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const relayout = setInterval(queueLayout, 1500);
   raf = requestAnimationFrame(frame);
   guide.dispatch({ type: 'start' });
+  void actions.resume();
 
   return {
     guide,
     emit: (name, detail) => guide.dispatch({ type: 'app', name, detail }),
     say: (text, mood) => guide.say(text, { mood }),
     read: () => reader.read(),
+    run: (instruction) => actions.handle(instruction),
+    registerAction: (name, handler) => void driver.handlers.set(name, handler),
+    stop: () => actions.stop(),
     openChat: () => guide.dispatch({ type: 'chat-open' }),
     startTour: () => guide.dispatch({ type: 'button', value: 'tour:start' }),
     hide: () => guide.dispatch({ type: 'hide' }),
     show: () => guide.dispatch({ type: 'show' }),
     destroy: () => {
+      actions.stop();
       cancelAnimationFrame(raf);
       clearInterval(relayout);
       unsubs.forEach((u) => u());

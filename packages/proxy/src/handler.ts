@@ -1,5 +1,6 @@
 import {
   CallLimiter,
+  planWithAI,
   FaqChat,
   Lines,
   answerWithAI,
@@ -76,6 +77,7 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
 
     try {
       if (route === 'chat') return json(await chat(await readJson(req), visitor, spend), 200, headers);
+      if (route === 'plan') return json(await plan(await readJson(req), spend), 200, headers);
       if (route === 'tts' && opts.voice?.enabled && provider.speak) return await tts(await readJson(req), headers, spend);
       if (route === 'stt' && opts.voice?.enabled && provider.transcribe) return await stt(req, headers, spend);
       return json({ error: 'not found' }, 404, headers);
@@ -101,6 +103,22 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
     );
     opts.onTrack?.({ kind: 'ai-question', visitor, question: redact(question), found: reply.found, lang });
     return reply;
+  }
+
+  async function plan(body: Record<string, unknown>, spend: () => void) {
+    const goal = str(body.goal, 300);
+    const page = body.page as { title?: unknown; url?: unknown; elements?: unknown } | undefined;
+    if (!goal || !page || !Array.isArray(page.elements)) throw new BadRequest('goal and page required');
+    spend();
+    return planWithAI(
+      provider,
+      {
+        goal,
+        page: { title: str(page.title, 200), url: str(page.url, 300), elements: page.elements.filter((e): e is string => typeof e === 'string') },
+        actions: Array.isArray(body.actions) ? (body.actions as never[]) : [],
+      },
+      opts.timeoutMs ?? 10000,
+    );
   }
 
   // Cached audio is free: a fixed line is paid for once, then replayed for everyone.

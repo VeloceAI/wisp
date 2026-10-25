@@ -96,6 +96,32 @@ Privacy: passwords, card numbers, OTP, CVV, PIN and ID fields are recognised and
 "blocked": { "selectors": [".admin-panel"], "paths": ["/admin*", "/account/billing"] }
 ```
 
+## It does things when asked
+
+"Search red dresses under ₹2000 and sort by price" or "red dress dhundo aur price se sort karo": Wisp works it out, then clicks, types, picks and scrolls one step at a time. It says what it's doing, highlights what it touches, and shows a Stop button throughout. Simple instructions are planned without AI; with AI on, anything else is planned by the model using only the elements on the page.
+
+Safety rules it always follows:
+- It asks first before anything final: pay, buy, place order, delete, send, submit, sign up, log out, or leaving the site.
+- It never types into, reads or sends passwords, card numbers, OTPs or ID numbers.
+- It does nothing in blocked areas or on blocked pages.
+
+Let it use your own functions instead of clicking around (preferred when they fit):
+
+```json
+"actions": [
+  { "name": "search", "description": "Search products", "params": { "query": { "type": "string" }, "maxPrice": { "type": "number" } } },
+  { "name": "track-order", "description": "Track my order", "button": "Track my order" },
+  { "name": "place-order", "description": "Place the order", "final": true }
+]
+```
+
+```js
+Wisp.instance.registerAction('search', ({ query, maxPrice }) => runMySearch(query, maxPrice));
+// or listen: addEventListener('wisp:run', (e) => e.detail.name /* e.detail.args */)
+```
+
+Actions with a `button` appear as tap-to-run buttons in chat, so they work without typing or AI. Run one from code with `Wisp.instance.run('sort by price')`. If a step opens a new page, Wisp carries on with the rest after it loads.
+
 ## Bring your own AI key
 
 Wisp works without AI. To let it answer in its own words, run the tiny proxy on your server; the key never reaches visitors' browsers.
@@ -159,7 +185,7 @@ npm run demo        # http://localhost:5180 — demo shop (with a mock-AI proxy 
 1. ✅ Core + web: character, moods, guiding, chat without AI, demo
 2. ✅ Your own AI key (OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama) through a tiny server you host, plus voice
 3. ✅ Page understanding: explain the page, find and point at things
-4. Actions on request, always asking before anything final
+4. ✅ Actions on request, always asking before anything final
 5. Expo / React Native
 6. Adaptive memory and an owner report
 7. Browser extension

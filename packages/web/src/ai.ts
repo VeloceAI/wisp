@@ -1,4 +1,4 @@
-import { AiAnswerer, pageFacts, redact, withTimeout, type ChatReply, type ChatTransport, type Guide, type KeyValueStore } from '@veloceai/wisp-core';
+import { AiAnswerer, pageFacts, pageForPlanner, parsePlan, redact, type AiPlanner, withTimeout, type ChatReply, type ChatTransport, type Guide, type KeyValueStore } from '@veloceai/wisp-core';
 
 /** A random id per browser so the proxy can cap AI calls per visitor. Not linked to the person. */
 export function visitorId(store: KeyValueStore): string {
@@ -22,6 +22,22 @@ export function proxyTransport(endpoint: string, visitor: string, timeoutMs = 80
       });
       if (!res.ok) throw new Error(`proxy ${res.status}`);
       return (await res.json()) as ChatReply;
+    });
+}
+
+export function proxyPlanner(endpoint: string, visitor: string, timeoutMs = 10000): AiPlanner {
+  const base = endpoint.replace(/\/$/, '');
+  return (goal, model, actions) =>
+    withTimeout(timeoutMs, async (signal) => {
+      const res = await fetch(`${base}/plan`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-wisp-visitor': visitor },
+        body: JSON.stringify({ goal: redact(goal), ...pageForPlanner(model, actions) }),
+        signal,
+      });
+      if (!res.ok) return null;
+      const { raw } = (await res.json()) as { raw: string };
+      return parsePlan(raw, goal, new Set(model.elements.filter((e) => !e.sensitive).map((e) => e.ref)), new Set(actions.map((a) => a.name)));
     });
 }
 

@@ -3,7 +3,7 @@ import type { Mood } from '../character/moods';
 import type { Button, HelpLevel } from './config';
 import type { Lang } from './lang';
 
-export type BubbleKind = 'line' | 'tip' | 'welcome' | 'tour' | 'reaction' | 'nudge';
+export type BubbleKind = 'line' | 'tip' | 'welcome' | 'tour' | 'reaction' | 'nudge' | 'action';
 
 export interface Bubble {
   id: number;
@@ -35,6 +35,8 @@ export interface GuideState {
   lang: Lang;
   helpLevel: HelpLevel;
   voice: boolean;
+  /** Set while the guide is carrying out an instruction. */
+  acting: { goal: string; step: number; total: number } | null;
   tour: { index: number; total: number } | null;
 }
 

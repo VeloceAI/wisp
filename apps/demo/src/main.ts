@@ -19,7 +19,8 @@ let max = Infinity;
 let cart = 0;
 
 function renderProducts() {
-  let list = products.filter((p) => p.name.toLowerCase().includes(query) && p.price <= max);
+  const words = query.split(/\s+/).filter(Boolean).map((w) => w.replace(/(es|s)$/, ''));
+  let list = products.filter((p) => words.every((w) => p.name.toLowerCase().includes(w)) && p.price <= max);
   if (sort.value === 'price-asc') list = [...list].sort((a, b) => a.price - b.price);
   if (sort.value === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
   grid.replaceChildren(
