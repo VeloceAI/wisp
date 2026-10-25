@@ -2,6 +2,9 @@ import type { GuideConfig } from '@veloceai/wisp-web';
 
 export const demoConfig: GuideConfig = {
   siteId: 'petal-demo',
+  siteName: 'Petal & Thread',
+  ai: { endpoint: '/wisp' },
+  voice: { mode: 'browser' },
   character: 'wisp',
   idle: { sleepyAfterMs: 30000, sleepAfterMs: 50000 },
   tour: [

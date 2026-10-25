@@ -34,6 +34,7 @@ export interface GuideState {
   busy: boolean;
   lang: Lang;
   helpLevel: HelpLevel;
+  voice: boolean;
   tour: { index: number; total: number } | null;
 }
 
@@ -61,6 +62,7 @@ export type GuideEvent =
   | { type: 'show' }
   | { type: 'set-help'; level: HelpLevel }
   | { type: 'set-lang'; lang: Lang }
+  | { type: 'set-voice'; on: boolean }
   | { type: 'dismiss' };
 
 export type TrackEvent =

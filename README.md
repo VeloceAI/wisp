@@ -80,6 +80,39 @@ Moods: idle, waking, thinking, talking, happy, excited, celebrate, confused, wor
 
 Built-in lines are in English, Hindi and Hinglish. The visitor's language is picked up from what they type. Add any other language by writing your FAQ, tips and lines with that code (`{ "ta": "…" }`) and button labels under `"ui"`; list them in `"languages"` to show them in settings.
 
+## Bring your own AI key
+
+Wisp works without AI. To let it answer in its own words, run the tiny proxy on your server; the key never reaches visitors' browsers.
+
+```bash
+WISP_PROVIDER=anthropic WISP_API_KEY=... WISP_ORIGINS=https://myshop.in npx wisp-proxy   # http://localhost:5181/wisp
+```
+
+Then add `"ai": { "endpoint": "https://myshop.in/wisp" }` to `wisp.json`.
+
+Providers: `openai`, `anthropic`, `gemini`, `groq`, `openrouter`, `ollama` (local, no key), plus `mock` for testing. Set `WISP_MODEL` to pick a model; defaults are `gpt-4o-mini`, `claude-opus-5-5` (low effort), `gemini-2.5-flash`, `llama-3.3-70b-versatile`, `llama3.2`.
+
+In Next.js or any server that speaks web `Request`/`Response`:
+
+```ts
+// app/wisp/[...route]/route.ts
+import { createWispHandler } from '@veloceai/wisp-proxy';
+const handler = createWispHandler({ provider: { provider: 'gemini', apiKey: process.env.GEMINI_KEY }, allowedOrigins: ['https://myshop.in'] });
+export { handler as GET, handler as POST, handler as OPTIONS };
+```
+
+Express/Node: `toNodeListener(createWispHandler(...))` from `@veloceai/wisp-proxy/node`. Desktop apps (Electron/Tauri) call `createWispHandler` in the main process and keep the key in the OS keychain (Electron `safeStorage`, Tauri Stronghold).
+
+Cost and safety built in:
+- 20 AI calls per visitor per day and 60 per IP (change with `perVisitor` / `perIp`); an 8-second timeout. When the limit, the timeout or the AI fails, Wisp falls back to its prewritten answers.
+- Questions matched confidently by your FAQ never call the AI.
+- Card numbers, OTPs, passwords and ID numbers are removed before anything reaches the AI, in the browser and again on the server.
+- Answers come only from your FAQ, docs and page; give the proxy `knowledge` to keep the facts server-side.
+
+## Voice (off by default)
+
+Visitors switch it on in settings. `"voice": { "mode": "browser" }` uses the device's built-in voice; `"mode": "ai"` uses the proxy's natural voice (OpenAI-compatible providers; turn it on with `WISP_VOICE=on`). Every spoken line is cached on the server, so a fixed line is paid for once. You can also ship your own recordings: `"voice": { "clips": { "welcome.first": "/audio/welcome.mp3" } }`. With voice on, a mic button lets visitors ask out loud.
+
 ## Behaviour that keeps it polite
 
 - Sits in a corner, hops beside what you're reading on bigger screens, and on phones never sits on top of buttons (it moves, then shrinks).
@@ -94,6 +127,7 @@ Built-in lines are in English, Hindi and Hinglish. The visitor's language is pic
 | `@veloceai/wisp-core` | The brain, moods, drawing maths, chat and memory. No UI. |
 | `@veloceai/wisp-web` | The page widget and the `wisp.js` script-tag build. |
 | `@veloceai/wisp-react`, `@veloceai/wisp-vue` | Thin wrappers. |
+| `@veloceai/wisp-proxy` | The owner-hosted AI proxy (`wisp-proxy` CLI, web handler, Node adapter). |
 
 ## Develop
 
@@ -101,13 +135,13 @@ Built-in lines are in English, Hindi and Hinglish. The visitor's language is pic
 npm install
 npm test
 npm run build
-npm run demo        # http://localhost:5180 — demo shop, /moods.html, /script-tag.html
+npm run demo        # http://localhost:5180 — demo shop (with a mock-AI proxy at /wisp), /moods.html, /script-tag.html
 ```
 
 ## Roadmap
 
 1. ✅ Core + web: character, moods, guiding, chat without AI, demo
-2. Your own AI key (OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama) through a tiny server you host, plus voice
+2. ✅ Your own AI key (OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama) through a tiny server you host, plus voice
 3. Page understanding: explain the page, find and point at things
 4. Actions on request, always asking before anything final
 5. Expo / React Native

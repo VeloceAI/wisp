@@ -75,6 +75,14 @@ export interface GuideConfig {
   idle?: { sleepyAfterMs?: number; sleepAfterMs?: number };
   /** Minimum gap between tips the visitor didn't ask for. */
   tipGapMs?: number;
+  siteName?: string;
+  /** Your Wisp proxy (keeps the AI key on your server). Without it, chat uses keyword answers. */
+  ai?: { endpoint: string; timeoutMs?: number; maxCalls?: number };
+  /**
+   * Voice is off until the visitor turns it on. `false` hides the option.
+   * "browser" uses the built-in voice; "ai" uses the proxy's natural voice and falls back to the browser.
+   */
+  voice?: false | { mode?: 'browser' | 'ai'; clips?: Record<string, string> };
 }
 
 export interface Button {

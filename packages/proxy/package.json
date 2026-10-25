@@ -1,0 +1,18 @@
+{
+  "name": "@veloceai/wisp-proxy",
+  "version": "0.1.0",
+  "description": "Tiny server that keeps your AI key off visitors' browsers. Works in Node, Next.js route handlers, Bun, Deno and Workers.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": { "wisp-proxy": "./dist/cli.js" },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
+    "./node": { "types": "./dist/node.d.ts", "import": "./dist/node.js", "require": "./dist/node.cjs" }
+  },
+  "files": ["dist"],
+  "scripts": { "build": "tsup src/index.ts src/node.ts src/cli.ts --format esm,cjs --dts --clean" },
+  "dependencies": { "@veloceai/wisp-core": "0.1.0" }
+}

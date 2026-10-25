@@ -35,11 +35,11 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - [x] tests (core + web jsdom), browser check, README, push
 
 ## Step 2 — AI providers + voice
-- [ ] Provider interface; OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama, Mock, Proxy client
-- [ ] Budget: per-visitor call cap, timeout, prewritten fallback
-- [ ] Proxy package (node http + web-standard handler for Next.js); redaction; CORS/origin allowlist
-- [ ] AI chat grounded on site content, in the visitor's language
-- [ ] Voice: browser speechSynthesis/recognition; AI TTS/STT via proxy; recorded clips for fixed lines + clip cache; off by default
+- [x] Provider interface; OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama, Mock, Proxy client
+- [x] Budget: per-visitor call cap, timeout, prewritten fallback
+- [x] Proxy package (node http + web-standard handler for Next.js); redaction; CORS/origin allowlist
+- [x] AI chat grounded on site content, in the visitor's language
+- [x] Voice: browser speechSynthesis/recognition; AI TTS/STT via proxy; recorded clips for fixed lines + clip cache; off by default
 
 ## Step 3 — page understanding
 - [ ] DOM/a11y reader → compact page model (headings, landmarks, buttons, links, forms, text), mutation re-read
@@ -64,3 +64,10 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - Found and fixed: FAQ matching too strict on small FAQs; character and bubble flew in from the corner on first paint; `hidden` ignored on reset buttons.
 - Language support opened up to any language code after the user asked.
 - `guide.ts` is 490 lines; split reactions out before it grows.
+
+### Step 2 (2026-10-25)
+- Shipped: 6 providers + mock behind one interface (raw fetch, no SDKs), call limiter + timeout, redaction, grounded JSON chat prompt that treats facts and questions as data, AiAnswerer with FAQ-first and fallback, `@veloceai/wisp-proxy` (web handler, Node adapter, CLI, origin allowlist, per-visitor/IP caps, cached TTS, STT), web transport, WebVoice (clips → AI voice → browser voice; browser or recorded mic input), voice toggle in settings.
+- Tests: 66 passing. Proxy tested for origin block, caps, 400/502 without leaking errors, TTS cache, redaction.
+- Browser check: chat answered through the demo's mock proxy end to end; voice toggle shows, off by default.
+- Not tested live: real provider calls (no key used, per the brief). Request shapes are unit-tested against each provider's documented format.
+- Split app reactions out of guide.ts (now 448 lines).

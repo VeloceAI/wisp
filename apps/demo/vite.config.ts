@@ -1,6 +1,8 @@
 import { defineConfig, type Plugin } from 'vite';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { toNodeListener } from '../../packages/proxy/src/node';
+import { createWispHandler } from '../../packages/proxy/src/handler';
 
 const pkg = (p: string) => fileURLToPath(new URL(`../../packages/${p}/src/index.ts`, import.meta.url));
 const bundle = fileURLToPath(new URL('../../packages/web/dist/wisp.js', import.meta.url));
@@ -21,8 +23,26 @@ const serveBundle = (): Plugin => ({
   },
 });
 
+/** The owner's proxy, mounted at /wisp. Uses the offline mock AI unless WISP_PROVIDER is set. */
+const proxy = (): Plugin => ({
+  name: 'wisp-proxy',
+  configureServer(server) {
+    const env = process.env;
+    const listener = toNodeListener(
+      createWispHandler({
+        provider: { provider: (env.WISP_PROVIDER as never) ?? 'mock', apiKey: env.WISP_API_KEY, model: env.WISP_MODEL },
+        guideName: 'Wisp',
+        siteName: 'Petal & Thread',
+        voice: { enabled: true },
+        perVisitor: 50,
+      }),
+    );
+    server.middlewares.use((req, res, next) => (req.url?.startsWith('/wisp/') ? listener(req, res) : next()));
+  },
+});
+
 export default defineConfig({
-  plugins: [serveBundle()],
+  plugins: [serveBundle(), proxy()],
   resolve: {
     alias: {
       '@veloceai/wisp-core': pkg('core'),

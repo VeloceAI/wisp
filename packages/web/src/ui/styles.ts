@@ -63,6 +63,7 @@ export const STYLES = `
 .msg .buttons { margin-top: 8px; }
 .typing { align-self: flex-start; color: var(--wisp-muted); font-size: 13px; }
 .chat form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--wisp-line); }
+.mic.live { color: #fff; background: #e5484d; animation: wisp-pulse 1.2s infinite; }
 .chat input { all: unset; flex: 1; padding: 9px 12px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--wisp-line); color: var(--wisp-ink); }
 .chat input:focus-visible { box-shadow: inset 0 0 0 2px var(--wisp-accent); }
 .settings { padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; }

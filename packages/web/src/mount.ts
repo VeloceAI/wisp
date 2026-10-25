@@ -19,6 +19,8 @@ import { STYLES } from './ui/styles';
 import { watchInput } from './watch/input';
 import { cssEscape, safeQueryAll, watchSections } from './watch/sections';
 import { browserStore } from './storage';
+import { connectAI, visitorId } from './ai';
+import { WebVoice } from './voice';
 
 export interface MountOptions {
   /** Where the host element goes. Defaults to document.body. */
@@ -44,11 +46,17 @@ export interface WispInstance {
 export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispInstance {
   const doc = document;
   const win = window;
+  const store = opts.store ?? browserStore();
   const guide = new Guide(config, {
-    store: opts.store ?? browserStore(),
+    store,
     hostLocale: doc.documentElement.lang || navigator.language,
     answerer: opts.answerer,
   });
+  if (!opts.answerer) connectAI(guide, store);
+  const voice =
+    config.voice === false
+      ? null
+      : new WebVoice({ mode: config.voice?.mode ?? 'browser', endpoint: config.ai?.endpoint, visitor: visitorId(store), clips: config.voice?.clips });
   const def = guide.character;
   const corner: Corner = config.position ?? 'bottom-right';
   const motionQuery = win.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -65,7 +73,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const bubble = h('div', { class: 'bubble', role: 'status', 'aria-live': 'polite' });
   const highlight = h('div', { class: 'highlight' });
   const tab = h('button', { type: 'button', class: `tab ${corner === 'bottom-left' ? 'left' : 'right'}`, hidden: true, onclick: () => guide.dispatch({ type: 'show' }) });
-  const chat = new ChatView(guide, (v) => guide.dispatch({ type: 'button', value: v }));
+  const chat = new ChatView(guide, (v) => guide.dispatch({ type: 'button', value: v }), voice);
   const layer = h('div', { class: 'layer' }, highlight, figure, bubble, chat.el, tab);
   layer.style.setProperty('--wisp-accent', def.body.shade);
   layer.style.setProperty('--wisp-soft', def.body.glow + '66');
@@ -164,6 +172,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const render = (s: GuideState) => {
     const prev = state;
     state = s;
+    if (prev.voice && !s.voice) voice?.stop();
     anim.setMood(s.mood);
     anim.setSpeaking(s.speaking);
     figure.hidden = s.hidden;
@@ -204,6 +213,9 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
 
   const onCue = (c: Cue) => {
     if (c.type === 'impulse') anim.impulse(c.kind);
+    else if (c.type === 'speak') {
+      if (state.voice && voice) void voice.speak(c.text, state.lang, c.lineId);
+    }
     else if (c.type === 'link') openLink(c.href);
     else if (c.type === 'track') opts.onTrack?.(c.event);
     else if (c.type === 'custom') {

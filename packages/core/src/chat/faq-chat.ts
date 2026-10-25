@@ -45,6 +45,16 @@ export class FaqChat implements Answerer {
     });
   }
 
+  /** Best-matching FAQ entries and content for a question, as plain facts for an AI prompt. */
+  retrieve(question: string, lang: Lang, limit = 5): { title: string; text: string; url?: string }[] {
+    return this.index.search(question, limit).flatMap((h) => {
+      const f = this.faq.get(h.id);
+      if (f) return [{ title: this.question(h.id, lang), text: localize(f.a, lang), url: f.link?.href }];
+      const doc = this.content.get(h.id);
+      return doc ? [{ title: doc.title, text: doc.text.slice(0, 1200), url: doc.url }] : [];
+    });
+  }
+
   question(id: string, lang: Lang): string {
     const f = this.faq.get(id);
     if (!f) return '';

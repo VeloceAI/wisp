@@ -1,4 +1,5 @@
 import type { Guide, GuideState, HelpLevel, Lang } from '@veloceai/wisp-core';
+import type { WebVoice } from '../voice';
 import { buttonRow, h } from './dom';
 
 const LANG_NAMES: Record<string, string> = {
@@ -17,15 +18,18 @@ export class ChatView {
   private rendered = -1;
   private showingSettings = false;
   private lastKey = '';
+  private mic: HTMLButtonElement;
 
   constructor(
     private guide: Guide,
     private onButton: (value: string) => void,
+    private voice: WebVoice | null = null,
   ) {
+    this.mic = h('button', { type: 'button', class: 'icon-btn mic', hidden: true, onclick: () => void this.listen() }, '🎤');
     this.title = h('span', { class: 'name' });
     this.log = h('div', { class: 'log', role: 'log', 'aria-live': 'polite' });
     this.input = h('input', { type: 'text', autocomplete: 'off', maxlength: '500' });
-    this.form = h('form', { onsubmit: (e: Event) => this.submit(e) }, this.input, h('button', { type: 'submit', class: 'btn primary' }));
+    this.form = h('form', { onsubmit: (e: Event) => this.submit(e) }, this.mic, this.input, h('button', { type: 'submit', class: 'btn primary' }));
     this.settings = h('div', { class: 'settings', hidden: true });
     this.el = h(
       'section',
@@ -45,7 +49,8 @@ export class ChatView {
   update(s: GuideState): void {
     const wasHidden = this.el.hidden;
     this.el.hidden = !s.chatOpen || s.hidden;
-    const key = `${s.lang}|${s.helpLevel}`;
+    this.mic.hidden = !(s.voice && this.voice?.canListen);
+    const key = `${s.lang}|${s.helpLevel}|${s.voice}`;
     if (key !== this.lastKey) {
       this.lastKey = key;
       this.relabel(s);
@@ -70,6 +75,8 @@ export class ChatView {
     label('settings', g.t('settings'));
     label('hide', g.t('hide'));
     label('close', g.t('close'));
+    this.mic.setAttribute('aria-label', g.t('speak'));
+    this.mic.title = g.t('speak');
   }
 
   private renderLog(s: GuideState): void {
@@ -90,6 +97,19 @@ export class ChatView {
     if (!text) return;
     this.input.value = '';
     this.guide.dispatch({ type: 'chat-send', text });
+  }
+
+  private async listen(): Promise<void> {
+    if (!this.voice || this.mic.classList.contains('live')) return this.voice?.stopListening();
+    this.mic.classList.add('live');
+    try {
+      const text = (await this.voice.listen(this.guide.getState().lang)).trim();
+      if (text) this.guide.dispatch({ type: 'chat-send', text });
+    } catch {
+      /* microphone blocked: typing still works */
+    } finally {
+      this.mic.classList.remove('live');
+    }
   }
 
   private toggleSettings(): void {
@@ -113,6 +133,10 @@ export class ChatView {
         seg(help, s.helpLevel === 'auto' ? g.help() : s.helpLevel, (v) => g.dispatch({ type: 'set-help', level: v as HelpLevel }))),
       h('div', {}, h('label', {}, g.t('language')),
         seg(langs.map((l) => [l, LANG_NAMES[l] ?? l]), s.lang, (v) => g.dispatch({ type: 'set-lang', lang: v }))),
+      this.voice
+        ? h('div', {}, h('label', {}, g.t('voice')),
+            seg([['on', g.t('on')], ['off', g.t('off')]], s.voice ? 'on' : 'off', (v) => g.dispatch({ type: 'set-voice', on: v === 'on' })))
+        : '',
     );
   }
 }

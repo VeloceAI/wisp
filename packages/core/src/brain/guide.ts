@@ -3,12 +3,12 @@ import type { Mood } from '../character/moods';
 import { FaqChat, type Answerer, type ChatAnswer } from '../chat/faq-chat';
 import { GuideMemory, InMemoryStore, type KeyValueStore } from '../memory/memory';
 import type { Button, GuideConfig, HelpLevel } from './config';
-import { detectLang, langFromLocale, localize, type Localized } from './lang';
+import { detectLang, langFromLocale, type Localized } from './lang';
 import { Lines, toLineSet, uiText, type UiStringKey } from './lines';
+import { reactToApp } from './reactions';
 import { TourRunner } from './tour';
 import {
   realScheduler,
-  type AppEventDetail,
   type Bubble,
   type BubbleKind,
   type Cue,
@@ -95,6 +95,7 @@ export class Guide {
       busy: false,
       lang,
       helpLevel: this.memory.get('helpLevel'),
+      voice: config.voice !== false && this.memory.get('voice'),
       tour: null,
     };
     this.tour = new TourRunner(this, config.tour ?? []);
@@ -229,7 +230,8 @@ export class Guide {
       case 'section':
         return this.onSection(e.id);
       case 'app':
-        return this.onApp(e.name, e.detail);
+        this.resetIdle();
+        return reactToApp(this, e.name, e.detail);
       case 'leave-intent':
         return this.onLeave();
       case 'button':
@@ -257,6 +259,10 @@ export class Guide {
       case 'set-lang':
         this.memory.update({ lang: e.lang });
         this.patch({ lang: e.lang });
+        return;
+      case 'set-voice':
+        this.memory.update({ voice: e.on });
+        this.patch({ voice: e.on && this.config.voice !== false });
         return;
       case 'dismiss':
         return this.dismissBubble();
@@ -386,65 +392,19 @@ export class Guide {
     this.say(text, { kind: 'tip', mood: tip.mood, anchor: tip.selector ?? id, thinkMs: regular ? 0 : 600 });
   }
 
-  private onApp(name: string, detail: AppEventDetail = {}): void {
-    this.resetIdle();
-    switch (name) {
-      case 'success':
-        this.say(detail.line ?? this.line('success'), { kind: 'reaction', mood: 'celebrate' });
-        return;
-      case 'error': {
-        this.track({ kind: 'error', message: detail.message ?? '', code: detail.code });
-        const fix = detail.fix ?? this.findFix(detail);
-        this.say(fix ?? this.line('error.generic'), {
-          kind: 'reaction',
-          mood: 'confused',
-          buttons: [{ label: this.t('askMe'), value: 'chat:open', primary: true }, { label: this.t('close'), value: 'dismiss' }],
-        });
-        this.cue({ type: 'impulse', kind: 'shake' });
-        return;
-      }
-      case 'loading':
-        this.loading = true;
-        this.refreshMood();
-        this.timer('loading-slow', 8000, () => this.loading && this.sayLine('loading.slow', { mood: 'thinking' }));
-        return;
-      case 'loaded':
-        this.loading = false;
-        this.clearTimer('loading-slow');
-        this.refreshMood();
-        return;
-      case 'conversion':
-        this.track({ kind: 'conversion', name: detail.code });
-        this.feel('excited', 2000);
-        return;
-    }
-    const reaction = this.config.reactions?.[name];
-    this.track({ kind: 'event', name });
-    if (!reaction) return;
-    const text = reaction.line && this.pickLocalized(reaction.line);
-    if (text) return this.say(text, { kind: 'reaction', mood: reaction.mood });
-    this.feel(reaction.mood, reaction.ms ?? 1800);
+  get isLoading(): boolean {
+    return this.loading;
   }
 
-  private pickLocalized(value: Localized | Localized[]): string | undefined {
+  setLoading(on: boolean): void {
+    this.loading = on;
+    this.refreshMood();
+  }
+
+  pickLocalized(value: Localized | Localized[]): string | undefined {
     const set = toLineSet(value);
     const list = set[this.state.lang] ?? set.en ?? Object.values(set).find((v) => v?.length) ?? [];
     return list[Math.floor(this.random() * list.length)];
-  }
-
-  private findFix(detail: AppEventDetail): string | undefined {
-    const haystack = `${detail.code ?? ''} ${detail.message ?? ''}`;
-    for (const rule of this.config.errors ?? []) {
-      const re = /^\/(.+)\/([a-z]*)$/.exec(rule.match);
-      let hit = false;
-      try {
-        hit = re ? new RegExp(re[1]!, re[2]).test(haystack) : haystack.toLowerCase().includes(rule.match.toLowerCase());
-      } catch {
-        hit = false;
-      }
-      if (hit) return localize(rule.fix, this.state.lang);
-    }
-    return undefined;
   }
 
   private onLeave(): void {
