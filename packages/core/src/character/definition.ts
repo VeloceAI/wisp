@@ -29,7 +29,11 @@ export interface CharacterDefinition {
   mouth: { style: MouthStyle; color: string; inner: string };
   cheeks: { show: boolean; color: string };
   accessory: { kind: AccessoryKind; color: string };
+  /** Logo mode: the logo image becomes the body and the face is drawn on top. */
+  logo: { src: string; fit: LogoFit; scale: number; faceY: number } | null;
 }
+
+export type LogoFit = 'circle' | 'rounded' | 'none';
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object | null ? DeepPartial<NonNullable<T[K]>> | T[K] : T[K] };
 export type CharacterInput = DeepPartial<CharacterDefinition>;
@@ -49,6 +53,7 @@ export const defaultCharacter: CharacterDefinition = {
   mouth: { style: 'smile', color: '#1D1442', inner: '#5A1F45' },
   cheeks: { show: true, color: '#FF8FB8' },
   accessory: { kind: 'none', color: '#FFD166' },
+  logo: null,
 };
 
 const SHAPES: BodyShape[] = ['wisp', 'round', 'squircle', 'blob', 'bean'];
@@ -99,6 +104,22 @@ export function defineCharacter(input: CharacterInput = {}): CharacterDefinition
     },
     cheeks: { show: c.show ?? d.cheeks.show, color: color(c.color, d.cheeks.color) },
     accessory: { kind: pick(a.kind, ACCESSORIES, d.accessory.kind), color: color(a.color, d.accessory.color) },
+    logo: logoFrom(input.logo),
+  };
+}
+
+// Image sources end up in an SVG attribute, so only images and plain URLs are allowed.
+const LOGO_SRC = /^(data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,[a-z0-9+/=]+|https?:\/\/[^\s"'<>]+|\.?\/[^\s"'<>]*)$/i;
+
+function logoFrom(v: CharacterInput['logo']): CharacterDefinition['logo'] {
+  if (!v || typeof v !== 'object' || typeof v.src !== 'string') return null;
+  const src = v.src.trim();
+  if (src.length > 800_000 || !LOGO_SRC.test(src)) return null;
+  return {
+    src,
+    fit: pick(v.fit, ['circle', 'rounded', 'none'] as LogoFit[], 'circle'),
+    scale: clamp(v.scale, 0.6, 1.4, 1),
+    faceY: clamp(v.faceY, -1, 1, 0),
   };
 }
 

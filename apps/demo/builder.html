@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wisp Character Builder</title>
+    <link rel="stylesheet" href="/src/builder.css" />
+  </head>
+  <body>
+    <header class="top"><b>Wisp</b> Character Builder <span class="sub">Design your guide, then copy one line into your site</span></header>
+    <main class="layout">
+      <aside id="controls" class="controls" data-wisp="off"></aside>
+      <section class="stage">
+        <div class="hero">
+          <div id="big" class="big"></div>
+          <div id="mood-buttons" class="moods"></div>
+        </div>
+        <h3>All 12 moods</h3>
+        <div id="grid" class="grid"></div>
+        <h3>Your code</h3>
+        <div class="code">
+          <div class="code-head"><span>Add to any website</span><button id="copy-tag">Copy</button></div>
+          <pre id="tag"></pre>
+          <div class="code-head"><span>wisp.json (settings)</span><button id="copy-json">Copy</button></div>
+          <pre id="json"></pre>
+        </div>
+        <button id="try" class="try">▶ Try it on this page</button>
+      </section>
+    </main>
+    <script type="module" src="/src/builder.ts"></script>
+  </body>
+</html>

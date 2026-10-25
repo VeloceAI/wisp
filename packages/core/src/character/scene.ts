@@ -1,5 +1,5 @@
 /** Renderer-neutral drawing: web turns it into SVG DOM, native into react-native-svg. */
-export type SceneTag = 'g' | 'path' | 'ellipse' | 'circle' | 'rect' | 'text';
+export type SceneTag = 'g' | 'path' | 'ellipse' | 'circle' | 'rect' | 'text' | 'image';
 
 export interface SceneNode {
   key: string;
@@ -24,9 +24,15 @@ export interface RadialGradient {
   stops: GradientStop[];
 }
 
+export interface ClipPath {
+  id: string;
+  d: string;
+}
+
 export interface Scene {
   size: number;
   gradients: RadialGradient[];
+  clipPaths?: ClipPath[];
   nodes: SceneNode[];
 }
 

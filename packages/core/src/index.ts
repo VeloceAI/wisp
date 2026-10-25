@@ -34,3 +34,6 @@ export * from './shop/catalog-words';
 export * from './ai/translate-service';
 export * from './nav/words';
 export * from './nav/handler';
+export * from './character/color';
+export { designFromText } from './character/designer';
+export * from './ai/design-service';

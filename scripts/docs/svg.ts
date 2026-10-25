@@ -15,7 +15,8 @@ export function sceneMarkup(scene: Scene): string {
       .map((s) => `<stop offset="${s.offset}" stop-color="${s.color}"${s.opacity !== undefined ? ` stop-opacity="${s.opacity}"` : ''}/>`)
       .join('')}</radialGradient>`)
     .join('');
-  return `<defs>${defs}</defs>${scene.nodes.map(node).join('')}`;
+  const clips = (scene.clipPaths ?? []).map((c) => `<clipPath id="${c.id}"><path d="${esc(c.d)}"/></clipPath>`).join('');
+  return `<defs>${clips}${defs}</defs>${scene.nodes.map(node).join('')}`;
 }
 
 /** The character in a mood, settled for `ms` so blends finish; `t` picks the moment in its loops. */

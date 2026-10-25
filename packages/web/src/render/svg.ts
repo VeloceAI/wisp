@@ -1,4 +1,4 @@
-import type { RadialGradient, Scene, SceneNode } from '@veloceai/wisp-core';
+import type { ClipPath, RadialGradient, Scene, SceneNode } from '@veloceai/wisp-core';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -26,15 +26,25 @@ export class SvgRenderer {
   }
 
   render(scene: Scene): void {
-    this.renderGradients(scene.gradients);
+    this.renderDefs(scene.gradients, scene.clipPaths ?? []);
     this.sync(this.svg, this.root, scene.nodes);
   }
 
-  private renderGradients(gradients: RadialGradient[]): void {
-    const key = JSON.stringify(gradients);
+  private renderDefs(gradients: RadialGradient[], clips: ClipPath[]): void {
+    const key = JSON.stringify([gradients, clips]);
     if (key === this.gradientKey) return;
     this.gradientKey = key;
+    const doc = this.svg.ownerDocument;
+    const clipEls = clips.map((c) => {
+      const el = doc.createElementNS(NS, 'clipPath');
+      el.setAttribute('id', c.id);
+      const path = doc.createElementNS(NS, 'path');
+      path.setAttribute('d', c.d);
+      el.appendChild(path);
+      return el;
+    });
     this.defs.replaceChildren(
+      ...clipEls,
       ...gradients.map((g) => {
         const el = this.svg.ownerDocument.createElementNS(NS, 'radialGradient');
         el.setAttribute('id', g.id);

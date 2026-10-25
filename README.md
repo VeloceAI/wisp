@@ -31,6 +31,14 @@ Every character has 12 moods. It blinks, breathes, follows the cursor, giggles w
 <img src="docs/assets/moods-mochi.svg" alt="Mochi moods" />
 </details>
 
+## Design your own (or use your logo)
+
+Open `/builder.html` in the demo: pick a sample, or type what you want ("a cute orange fox for a music app"), or **upload your logo**. The logo becomes the character's body with eyes, mouth and all 12 moods drawn on top, and its brand colours are picked up automatically. Then copy the ready code.
+
+<p align="center"><img src="docs/assets/screens/builder.png" width="420" alt="Character builder" /> <img src="docs/assets/screens/builder-logo.png" width="420" alt="Logo mode" /></p>
+
+Describing a character works without AI (colour, animal, robot, plant, royal, cute… in English, Hindi or Hinglish). With the AI proxy it understands any description.
+
 ## What it does
 
 | | |

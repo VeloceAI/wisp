@@ -2,6 +2,7 @@ import {
   CallLimiter,
   planWithAI,
   translateForSearch,
+  designWithAI,
   FaqChat,
   Lines,
   answerWithAI,
@@ -79,6 +80,12 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
     try {
       if (route === 'chat') return json(await chat(await readJson(req), visitor, spend), 200, headers);
       if (route === 'plan') return json(await plan(await readJson(req), spend), 200, headers);
+      if (route === 'design') {
+        const description = str((await readJson(req)).description, 300);
+        if (!description) throw new BadRequest('description required');
+        spend();
+        return json({ character: await designWithAI(provider, description, opts.timeoutMs ?? 10000) }, 200, headers);
+      }
       if (route === 'translate') return json(await translate(await readJson(req), spend), 200, headers);
       if (route === 'tts' && opts.voice?.enabled && provider.speak) return await tts(await readJson(req), headers, spend);
       if (route === 'stt' && opts.voice?.enabled && provider.transcribe) return await stt(req, headers, spend);

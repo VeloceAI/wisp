@@ -2,6 +2,7 @@ import type { CharacterDefinition } from './definition';
 import type { Frame } from './animator';
 import { n, r2, smoothClosedPath, type Scene, type SceneNode } from './scene';
 import { effectNodes } from './effects';
+import { logoBody } from './logo';
 
 const SIZE = 200;
 const CX = 100;
@@ -186,7 +187,8 @@ export function buildScene(def: CharacterDefinition, f: Frame, idPrefix = 'wisp'
   const face = f.face;
   const lift = f.bobY + f.hopY + face.sink;
   const pts = bodyPoints(def, f);
-  const topY = Math.min(...pts.map((p) => p[1]));
+  const logo = def.logo ? logoBody(def.logo, idPrefix) : null;
+  const topY = logo ? logo.top : Math.min(...pts.map((p) => p[1]));
   const sx = f.squashX * (1 - f.breath * 0.012);
   const sy = f.squashY * (1 + f.breath * 0.02);
   const bodyId = `${idPrefix}-body`;
@@ -195,16 +197,16 @@ export function buildScene(def: CharacterDefinition, f: Frame, idPrefix = 'wisp'
   const faceDx = f.gazeX * 5;
   const faceDy = f.gazeY * 3.5;
   const eyeGap = 23 * def.eyes.spacing;
-  const ey = 104 - def.eyes.height * 10 + faceDy;
+  const ey = 104 - def.eyes.height * 10 - (def.logo?.faceY ?? 0) * 25 + faceDy;
   const exL = CX - eyeGap + faceDx;
   const exR = CX + eyeGap + faceDx;
   const blush = def.cheeks.show ? face.blush * 0.6 : 0;
 
-  const body: SceneNode[] = [
-    n('body', 'path', { d: smoothClosedPath(pts), fill: `url(#${bodyId})`, ...(def.body.outline ? { stroke: def.body.outline, 'stroke-width': 3 } : {}) }),
-  ];
-  if (def.body.belly) body.push(n('belly', 'ellipse', { cx: CX, cy: 142, rx: 34, ry: 22, fill: def.body.belly, opacity: 0.85 }));
-  body.push(n('gloss', 'ellipse', { cx: 76, cy: 84, rx: 13, ry: 8, fill: '#fff', opacity: 0.35, transform: 'rotate(-30 76 84)' }));
+  const body: SceneNode[] = logo
+    ? logo.nodes
+    : [n('body', 'path', { d: smoothClosedPath(pts), fill: `url(#${bodyId})`, ...(def.body.outline ? { stroke: def.body.outline, 'stroke-width': 3 } : {}) })];
+  if (!logo && def.body.belly) body.push(n('belly', 'ellipse', { cx: CX, cy: 142, rx: 34, ry: 22, fill: def.body.belly, opacity: 0.85 }));
+  if (!logo) body.push(n('gloss', 'ellipse', { cx: 76, cy: 84, rx: 13, ry: 8, fill: '#fff', opacity: 0.35, transform: 'rotate(-30 76 84)' }));
 
   const faceNodes: SceneNode[] = [
     n('cheekL', 'ellipse', { cx: r2(exL - 8), cy: r2(ey + 20), rx: 9, ry: 5.5, fill: def.cheeks.color, opacity: r2(blush) }),
@@ -220,6 +222,7 @@ export function buildScene(def: CharacterDefinition, f: Frame, idPrefix = 'wisp'
   const shadowScale = 1 + lift / 60;
   return {
     size: SIZE,
+    clipPaths: logo?.clip ? [logo.clip] : [],
     gradients: [
       { id: bodyId, cx: 0.38, cy: 0.32, r: 0.8, stops: [{ offset: 0, color: def.body.glow }, { offset: 0.45, color: def.body.color }, { offset: 1, color: def.body.shade }] },
       { id: glowId, cx: 0.5, cy: 0.5, r: 0.5, stops: [{ offset: 0, color: def.body.glow, opacity: 0.55 }, { offset: 1, color: def.body.glow, opacity: 0 }] },

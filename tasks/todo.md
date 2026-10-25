@@ -100,7 +100,7 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 
 ## Next (2026-10-26, agreed with the user)
 - [x] Voice navigation: "go to X", "open cart", "peeche jao", scroll; `pages` site map in config; talk mode continues after a page change; 11 languages; no AI
-- [ ] Character builder page with live 12-mood preview and copyable config
-- [ ] Logo mode: logo becomes the body (face drawn on top), palette taken from the logo
-- [ ] "Describe it" designer via the proxy (AI), mock in the demo
+- [x] Character builder page with live 12-mood preview and copyable config
+- [x] Logo mode: logo becomes the body (face drawn on top), palette taken from the logo
+- [x] "Describe it" designer via the proxy (AI), mock in the demo
 - [ ] Livelier demo video: hook, faster scenes, brighter voice (af_bella, slight speed-up), music bed (needs a royalty-free track; ask before downloading), title and end cards, new scenes for navigation and the builder
