@@ -56,10 +56,65 @@ describe('Guide', () => {
     first.dispatch({ type: 'start' });
     first.dispatch({ type: 'button', value: 'tour:start' });
     first.dispatch({ type: 'button', value: 'tour:next' });
+    vi.advanceTimersByTime(31 * 60 * 1000);
     const { g } = make(config, store);
     g.dispatch({ type: 'start' });
     vi.advanceTimersByTime(1100);
     expect(g.getState().bubble?.buttons[0]?.value).toBe('tour:resume');
+  });
+
+  it('does not repeat the welcome on every page of the same visit', () => {
+    const store = new InMemoryStore();
+    make(config, store).g.dispatch({ type: 'start' });
+    vi.advanceTimersByTime(60_000);
+    const { g } = make(config, store);
+    g.dispatch({ type: 'start' });
+    vi.advanceTimersByTime(1100);
+    expect(g.getState().bubble).toBeNull();
+  });
+
+  it('remembers "Not now" on the finish-the-tour prompt', () => {
+    const store = new InMemoryStore();
+    const first = make(config, store).g;
+    first.dispatch({ type: 'start' });
+    first.dispatch({ type: 'button', value: 'tour:start' });
+    first.dispatch({ type: 'button', value: 'tour:next' });
+    vi.advanceTimersByTime(31 * 60 * 1000);
+    const second = make(config, store).g;
+    second.dispatch({ type: 'start' });
+    vi.advanceTimersByTime(1100);
+    second.dispatch({ type: 'button', value: 'tour:later' });
+    expect(second.getState().bubble).toBeNull();
+    vi.advanceTimersByTime(31 * 60 * 1000);
+    const third = make(config, store).g;
+    third.dispatch({ type: 'start' });
+    vi.advanceTimersByTime(1100);
+    expect(third.getState().bubble?.buttons[0]?.value).not.toBe('tour:resume');
+  });
+
+  it('keeps a tip that arrives during a sticky bubble or host dialog and shows it after', () => {
+    let dialog = true;
+    const g = new Guide(config, { store: new InMemoryStore(), random: () => 0, overlayOpen: () => dialog });
+    g.dispatch({ type: 'section', id: 'pricing' });
+    vi.advanceTimersByTime(2100);
+    expect(g.getState().bubble).toBeNull();
+    dialog = false;
+    g.say('Pick one', { buttons: [{ label: 'OK', value: 'dismiss' }] });
+    vi.advanceTimersByTime(2100);
+    expect(g.getState().bubble?.text).toBe('Pick one');
+    g.dispatch({ type: 'dismiss' });
+    vi.advanceTimersByTime(2800);
+    expect(g.getState().bubble?.text).toBe('Plans start free.');
+  });
+
+  it('drops a waiting tip when the visitor leaves the section', () => {
+    const { g } = make();
+    g.say('Pick one', { buttons: [{ label: 'OK', value: 'dismiss' }] });
+    g.dispatch({ type: 'section', id: 'pricing' });
+    g.dispatch({ type: 'section', id: null });
+    g.dispatch({ type: 'dismiss' });
+    vi.advanceTimersByTime(5000);
+    expect(g.getState().bubble).toBeNull();
   });
 
   it('turns an error into a plain-English fix', () => {

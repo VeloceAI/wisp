@@ -78,6 +78,7 @@ export const DEFAULT_LINES: LineBank = {
   'page.summary': { en: ['This is “{title}”.'], hi: ['यह “{title}” पेज है।'], hinglish: ['Yeh “{title}” page hai.'] },
   'page.sections': { en: ['It covers: {list}.'], hi: ['इसमें है: {list}।'], hinglish: ['Isme hai: {list}.'] },
   'page.actions': { en: ['You can use: {list}.'], hi: ['आप इस्तेमाल कर सकते हैं: {list}।'], hinglish: ['Aap use kar sakte ho: {list}.'] },
+  'page.links': { en: ['Links here: {list}.'], hi: ['यहाँ के लिंक: {list}।'], hinglish: ['Yahan ke links: {list}.'] },
   'page.found': { en: ['Here it is: {thing}.', 'Found it: {thing}.'], hi: ['यह रहा: {thing}।'], hinglish: ['Yeh raha: {thing}.'] },
   'page.blocked': { en: ['I don’t read this page, sorry. Ask me anything else!'], hi: ['माफ़ कीजिए, मैं यह पेज नहीं पढ़ता। कुछ और पूछें!'], hinglish: ['Sorry, yeh page main nahi padhta. Kuch aur poocho!'] },
   'act.typing': { en: ['Typing “{text}” into {thing}…'], hi: ['{thing} में “{text}” लिख रहा हूँ…'], hinglish: ['{thing} mein “{text}” likh raha hoon…'] },

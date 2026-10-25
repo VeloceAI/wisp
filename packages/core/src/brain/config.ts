@@ -80,6 +80,8 @@ export interface GuideConfig {
   /** "small" | "medium" | "large" | pixels, or different values per screen: `{ "desktop": 120, "phone": "small" }`. */
   size?: GuideSize | { desktop?: GuideSize; phone?: GuideSize };
   theme?: GuideTheme;
+  /** Pixels the app keeps for itself, e.g. `{ "bottom": 64 }` for a bottom tab bar. Every placement respects it. */
+  insets?: { top?: number; right?: number; bottom?: number; left?: number };
   /** Areas the guide never reads or touches: CSS selectors, and URL paths such as "/admin*". */
   blocked?: { selectors?: string[]; paths?: string[] };
   /** Things the guide may do directly; it prefers these over clicking around. */

@@ -56,6 +56,13 @@ import { Wisp, useWisp } from '@veloceai/wisp-react';
 <template><Wisp :config="config"><App /></Wisp></template>
 ```
 
+In apps with client-side routing, pass `navigate` so FAQ links and actions switch pages without a full reload:
+
+```tsx
+const router = useRouter();
+<Wisp config={config} navigate={(path) => router.push(path)}>…</Wisp>
+```
+
 Electron and Tauri apps use the web build as is.
 
 ## Its own look
@@ -90,6 +97,8 @@ Moods: idle, waking, thinking, talking, happy, excited, celebrate, confused, wor
 - `theme.radius`: corner roundness, from 0 (square) to 28.
 - `theme.mode`: `"auto"` follows the visitor's light/dark setting.
 - `theme.chatWidth`, `theme.chatHeight`.
+
+If your app has a bottom tab bar or a fixed header, tell Wisp how much room to leave: `"insets": { "bottom": 64 }`. The character, its bubble, the chat box and the "Show guide" tab all stay clear of it.
 
 Changing these never changes behaviour. Placement, phone corners, avoiding buttons and the chat position all work from the size you set, and the chat always fits above the character. Styles live inside Wisp's own shadow DOM, so they can't affect your page and your page can't break them.
 

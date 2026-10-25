@@ -18,7 +18,7 @@ import {
 import { SvgRenderer } from './render/svg';
 import { ChatView } from './ui/chat';
 import { buttonRow, h } from './ui/dom';
-import { clamp, coversInteractive, dockBox, isPhone, placeGuide, type Box, type Corner } from './ui/placement';
+import { clamp, coversInteractive, dockBox, isPhone, placeGuide, toInsets, type Box, type Corner } from './ui/placement';
 import { STYLES } from './ui/styles';
 import { applyTheme, resolveSize } from './ui/theme';
 import { watchInput } from './watch/input';
@@ -38,6 +38,8 @@ export interface MountOptions {
   onTrack?: (event: TrackEvent) => void;
   /** Called for buttons with custom values; also fired as a `wisp:action` window event. */
   onAction?: (value: string) => void;
+  /** Same-site page changes go through this (e.g. Next.js `router.push`) instead of a full reload. */
+  navigate?: (path: string) => void;
 }
 
 export interface WispInstance {
@@ -64,13 +66,15 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const store = opts.store ?? browserStore();
   const guide = new Guide(config, {
     store,
+    // Host dialogs and sheets take priority; tips wait until they close.
+    overlayOpen: () => !!doc.querySelector('dialog[open], [aria-modal="true"]'),
     hostLocale: doc.documentElement.lang || navigator.language,
     answerer: opts.answerer,
   });
   const reader = new PageReader(doc, { blockedSelectors: config.blocked?.selectors, blockedPaths: config.blocked?.paths });
   guide.page = reader;
   if (!opts.answerer) connectAI(guide, store);
-  const driver = new DomDriver(reader, () => config.actions ?? []);
+  const driver = new DomDriver(reader, () => config.actions ?? [], (href) => openLink(href));
   const actions = new ActionRunner(guide, driver, {
     store: browserStore('sessionStorage'),
     aiPlanner: config.ai?.endpoint ? proxyPlanner(config.ai.endpoint, visitorId(store)) : undefined,
@@ -118,8 +122,11 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     if (!target) return null;
     if (target.startsWith('ref:')) return reader.element(target.slice(4));
     const bySection = doc.querySelector(`[data-wisp-section="${cssEscape(target)}"],[data-wisp-target="${cssEscape(target)}"]`);
-    return bySection ?? safeQueryAll(doc, target)[0] ?? null;
+    if (bySection) return bySection;
+    const all = safeQueryAll(doc, target);
+    return all.find(isVisible) ?? all[0] ?? null;
   };
+  const insets = toInsets(config.insets);
 
   const layout = () => {
     layoutQueued = false;
@@ -129,7 +136,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     layer.style.setProperty('--wisp-size', `${size}px`);
     const targetEl = state.chatOpen ? null : resolve(state.anchor);
     const placed = state.chatOpen
-      ? { box: dockBox(corner, size, vw, vh), mini: false }
+      ? { box: dockBox(corner, size, vw, vh, 0, insets), mini: false }
       : placeGuide({
           corner,
           size,
@@ -137,7 +144,9 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
           vh,
           target: targetEl?.getBoundingClientRect() ?? null,
           covers: (b) => coversInteractive(b, doc, host),
+          insets,
         });
+    tab.style.bottom = `${18 + insets.bottom}px`;
     box = placed.box;
     figure.classList.toggle('mini', placed.mini && !state.chatOpen);
     figure.style.width = figure.style.height = `${box.w}px`;
@@ -156,8 +165,8 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     if (!bubble.classList.contains('show')) return;
     const bw = bubble.offsetWidth || 260;
     const bh = bubble.offsetHeight || 80;
-    const above = box.y - bh - 10 >= 8;
-    const y = above ? box.y - bh - 10 : Math.min(vh - bh - 8, box.y + box.h + 10);
+    const above = box.y - bh - 10 >= 8 + insets.top;
+    const y = above ? box.y - bh - 10 : Math.min(vh - insets.bottom - bh - 8, box.y + box.h + 10);
     const x = clamp(box.x + box.w / 2 - bw / 2 + (box.x > vw / 2 ? -bw / 3 : bw / 3), 12, vw - bw - 12);
     bubble.style.transform = `translate(${x}px, ${y}px)`;
   };
@@ -168,7 +177,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     const bottom = vh - box.y + 8;
     s.bottom = `${bottom}px`;
     // A big character pushes the panel up; cap its height so the header never goes off-screen.
-    s.maxHeight = `${Math.max(200, vh - bottom - 12)}px`;
+    s.maxHeight = `${Math.max(200, vh - bottom - 12 - insets.top)}px`;
     if (isPhone(vw)) {
       s.left = '12px';
       s.right = 'auto';
@@ -257,16 +266,17 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
       win.dispatchEvent(new CustomEvent('wisp:action', { detail: { value: c.value } }));
     }
   };
-  const openLink = (href: string) => {
+  function openLink(href: string) {
     try {
       const url = new URL(href, win.location.href);
       if (!/^https?:$/.test(url.protocol)) return;
-      if (url.origin === win.location.origin) win.location.assign(url.href);
+      if (url.origin === win.location.origin && opts.navigate) opts.navigate(url.pathname + url.search + url.hash);
+      else if (url.origin === win.location.origin) win.location.assign(url.href);
       else win.open(url.href, '_blank', 'noopener');
     } catch {
       /* bad link from config: ignore */
     }
-  };
+  }
 
   const unsubs = [
     guide.subscribe(render),
@@ -316,4 +326,10 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
       host.remove();
     },
   };
+}
+
+function isVisible(el: Element): boolean {
+  if (!el.getClientRects().length) return false;
+  const style = el.ownerDocument.defaultView?.getComputedStyle(el);
+  return !style || (style.visibility !== 'hidden' && style.display !== 'none');
 }

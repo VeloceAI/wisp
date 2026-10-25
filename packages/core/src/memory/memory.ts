@@ -28,6 +28,10 @@ export interface GuidePrefs {
   tourDone: boolean;
   seenTips: string[];
   questions: number;
+  /** When the last welcome was shown, so moving between pages doesn't repeat it. */
+  lastWelcome: number;
+  /** The visitor said "Not now" to finishing the tour. */
+  tourLater: boolean;
 }
 
 const DEFAULTS: GuidePrefs = {
@@ -42,6 +46,8 @@ const DEFAULTS: GuidePrefs = {
   tourDone: false,
   seenTips: [],
   questions: 0,
+  lastWelcome: 0,
+  tourLater: false,
 };
 
 /** What the guide remembers about one visitor on one site. */

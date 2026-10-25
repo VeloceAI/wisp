@@ -14,7 +14,7 @@ export class TourRunner {
 
   canResume(): boolean {
     const i = this.guide.memory.get('tourIndex');
-    return i > 0 && i < this.steps.length && !this.guide.memory.get('tourDone');
+    return i > 0 && i < this.steps.length && !this.guide.memory.get('tourDone') && !this.guide.memory.get('tourLater');
   }
 
   handle(cmd: string): void {
@@ -23,6 +23,10 @@ export class TourRunner {
     if (cmd === 'resume') return this.show(Math.max(0, this.guide.memory.get('tourIndex')));
     if (cmd === 'next') return cur + 1 >= this.steps.length ? this.finish(true) : this.show(cur + 1);
     if (cmd === 'back') return this.show(Math.max(0, cur - 1));
+    if (cmd === 'later') {
+      this.guide.memory.update({ tourLater: true });
+      return this.guide.dismissBubble();
+    }
     if (cmd === 'end') return this.finish(false);
   }
 
@@ -32,7 +36,7 @@ export class TourRunner {
     const g = this.guide;
     const lang = g.getState().lang;
     const last = index === this.steps.length - 1;
-    g.memory.update({ tourIndex: index });
+    g.memory.update({ tourIndex: index, tourLater: false });
     g.patch({ tour: { index, total: this.steps.length }, highlight: step.target, chatOpen: false });
     g.track({ kind: 'tour', step: index, action: 'view' });
     g.say(localize(step.text, lang), {

@@ -3,7 +3,7 @@ import type { SectionTip } from '@veloceai/wisp-core';
 const DWELL_MS = 1200;
 
 /** Reports which tip section the visitor is reading: the most visible one, after a short dwell. */
-export function watchSections(doc: Document, sections: SectionTip[], onSection: (id: string) => void): () => void {
+export function watchSections(doc: Document, sections: SectionTip[], onSection: (id: string | null) => void): () => void {
   if (!sections.length || typeof IntersectionObserver === 'undefined') return () => {};
   const ids = new Map<Element, string>();
   for (const s of sections) {
@@ -27,6 +27,7 @@ export function watchSections(doc: Document, sections: SectionTip[], onSection: 
       current = best;
       clearTimeout(timer);
       if (best) timer = setTimeout(() => current === best && onSection(best), DWELL_MS);
+      else onSection(null);
     },
     { threshold: [0, 0.25, 0.5, 0.75, 1] },
   );

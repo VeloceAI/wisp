@@ -22,6 +22,7 @@ export class DomDriver implements ActionDriver {
   constructor(
     private reader: PageReader,
     private declared: () => SiteActionDecl[],
+    private go: (href: string) => void = (href) => window.location.assign(href),
   ) {}
 
   read() {
@@ -71,7 +72,7 @@ export class DomDriver implements ActionDriver {
       case 'press':
         return pressKey(node ?? (document.activeElement as HTMLElement) ?? document.body, step.key);
       case 'navigate':
-        if (sameOrigin(step.url)) window.location.assign(step.url);
+        if (sameOrigin(step.url)) this.go(step.url);
         else window.open(step.url, '_blank', 'noopener');
         return;
       case 'tool': {

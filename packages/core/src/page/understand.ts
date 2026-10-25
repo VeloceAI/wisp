@@ -62,9 +62,12 @@ export function explainPage(model: PageModel, lang: Lang, lines: Lines): string 
       .filter((e) => ['button', 'searchbox', 'combobox'].includes(e.role) && !e.sensitive && e.name.length <= 40)
       .map((e) => e.name),
   ).slice(0, 5);
-  const parts = [lines.pick('page.summary', lang, { title: model.title || model.url })];
+  const h1 = model.elements.find((e) => e.role === 'heading' && e.level === 1)?.name;
+  const links = unique(model.elements.filter((e) => e.role === 'link' && e.name.length <= 30).map((e) => e.name)).slice(0, 6);
+  const parts = [lines.pick('page.summary', lang, { title: h1 || model.title || model.url })];
   if (sections.length) parts.push(lines.pick('page.sections', lang, { list: sections.join(', ') }));
   if (actions.length) parts.push(lines.pick('page.actions', lang, { list: actions.join(', ') }));
+  if (links.length) parts.push(lines.pick('page.links', lang, { list: links.join(', ') }));
   return parts.join(' ');
 }
 

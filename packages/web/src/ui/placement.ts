@@ -7,24 +7,36 @@ export interface Box {
 
 export type Corner = 'bottom-right' | 'bottom-left';
 
+/** Space the host app keeps for itself, such as a bottom tab bar. */
+export interface Insets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+export const NO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
+
 const MARGIN = 16;
 const INTERACTIVE = 'a[href],button,input,select,textarea,summary,label,[role="button"],[role="link"],[role="tab"],[contenteditable="true"],[tabindex]:not([tabindex="-1"])';
 
 export const isPhone = (vw: number) => vw < 640;
 
-export function dockBox(corner: Corner, size: number, vw: number, vh: number, lift = 0): Box {
-  const x = corner === 'bottom-left' ? MARGIN : vw - size - MARGIN;
-  return { x, y: vh - size - MARGIN - lift, w: size, h: size };
+export function dockBox(corner: Corner, size: number, vw: number, vh: number, lift = 0, inset: Insets = NO_INSETS): Box {
+  const x = corner === 'bottom-left' ? MARGIN + inset.left : vw - size - MARGIN - inset.right;
+  return { x, y: vh - size - MARGIN - lift - inset.bottom, w: size, h: size };
 }
 
-/** Beside the target: right, then left, then above. Null when it can't fit without covering it. */
-export function besideBox(t: DOMRect, size: number, vw: number, vh: number): Box | null {
-  const y = clamp(t.top + Math.min(t.height, 160) / 2 - size / 2, MARGIN, vh - size - MARGIN);
-  if (vw - t.right >= size + MARGIN + 8) return { x: t.right + 8, y, w: size, h: size };
-  if (t.left >= size + MARGIN + 8) return { x: t.left - size - 8, y, w: size, h: size };
-  const x = clamp(t.left + t.width - size, MARGIN, vw - size - MARGIN);
-  if (vh - t.bottom >= size + MARGIN + 8) return { x, y: t.bottom + 8, w: size, h: size };
-  if (t.top >= size + MARGIN + 8) return { x, y: t.top - size - 8, w: size, h: size };
+/** Beside the target: right, then left, then below, then above. Null when it can't fit without covering it. */
+export function besideBox(t: DOMRect, size: number, vw: number, vh: number, inset: Insets = NO_INSETS): Box | null {
+  const top = MARGIN + inset.top;
+  const bottom = vh - inset.bottom;
+  const y = clamp(t.top + Math.min(t.height, 160) / 2 - size / 2, top, bottom - size - MARGIN);
+  if (vw - inset.right - t.right >= size + MARGIN + 8) return { x: t.right + 8, y, w: size, h: size };
+  if (t.left - inset.left >= size + MARGIN + 8) return { x: t.left - size - 8, y, w: size, h: size };
+  const x = clamp(t.left + t.width - size, MARGIN + inset.left, vw - size - MARGIN - inset.right);
+  if (bottom - t.bottom >= size + MARGIN + 8) return { x, y: t.bottom + 8, w: size, h: size };
+  if (t.top - inset.top >= size + MARGIN + 8) return { x, y: t.top - size - 8, w: size, h: size };
   return null;
 }
 
@@ -56,16 +68,28 @@ export function placeGuide(opts: {
   vh: number;
   target: DOMRect | null;
   covers: (b: Box) => boolean;
+  insets?: Insets;
 }): Placement {
   const { corner, size, vw, vh, target, covers } = opts;
+  const inset = opts.insets ?? NO_INSETS;
   if (target && !isPhone(vw)) {
-    const beside = besideBox(target, size, vw, vh);
+    const beside = besideBox(target, size, vw, vh, inset);
     if (beside && !covers(beside)) return { box: beside, mini: false };
   }
   const other: Corner = corner === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-  const candidates = [dockBox(corner, size, vw, vh), dockBox(other, size, vw, vh), dockBox(corner, size, vw, vh, 72), dockBox(other, size, vw, vh, 72)];
+  const candidates = [
+    dockBox(corner, size, vw, vh, 0, inset),
+    dockBox(other, size, vw, vh, 0, inset),
+    dockBox(corner, size, vw, vh, 72, inset),
+    dockBox(other, size, vw, vh, 72, inset),
+  ];
   for (const box of candidates) if (!covers(box)) return { box, mini: false };
   const mini = Math.round(size * 0.6);
-  const box = dockBox(corner, mini, vw, vh);
-  return { box: { ...box, x: corner === 'bottom-left' ? 0 : vw - mini }, mini: true };
+  const box = dockBox(corner, mini, vw, vh, 0, inset);
+  return { box: { ...box, x: corner === 'bottom-left' ? inset.left : vw - mini - inset.right }, mini: true };
+}
+
+export function toInsets(v: Partial<Insets> | undefined): Insets {
+  const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? Math.min(400, Math.max(0, x)) : 0);
+  return { top: n(v?.top), right: n(v?.right), bottom: n(v?.bottom), left: n(v?.left) };
 }

@@ -30,6 +30,8 @@ export interface GuideDeps {
   answerer?: Answerer;
   /** Lets the guide read the current screen (web: the DOM reader). */
   page?: PageSource;
+  /** True while the host app shows its own dialog or sheet; unasked-for tips wait. */
+  overlayOpen?: () => boolean;
 }
 
 export interface SayOptions {
@@ -72,6 +74,8 @@ export class Guide {
   private started = false;
   private tour: TourRunner;
   private random: () => number;
+  private overlayOpen: () => boolean;
+  private pendingTip: string | null = null;
   page: PageSource | null;
   actions: ActionRunner | null = null;
 
@@ -81,6 +85,7 @@ export class Guide {
     this.character = defineCharacter(charInput);
     this.sched = deps.scheduler ?? realScheduler;
     this.random = deps.random ?? Math.random;
+    this.overlayOpen = deps.overlayOpen ?? (() => false);
     this.memory = new GuideMemory(deps.store ?? new InMemoryStore(), config.siteId);
     this.lines = new Lines(config.lines, deps.random);
     this.faq = new FaqChat(config.faq ?? [], config.content ?? [], this.lines);
@@ -300,13 +305,16 @@ export class Guide {
     this.memory.recordVisit(this.sched.now());
     this.resetIdle();
     if (this.state.hidden || this.config.welcome === false) return;
+    const now = this.sched.now();
+    if (now - this.memory.get('lastWelcome') < 30 * 60 * 1000) return;
+    this.memory.update({ lastWelcome: now });
     const visits = this.memory.get('visits');
     this.feel('waking', 900);
     this.timer('welcome', 1000, () => {
       if (this.tour.canResume()) {
         this.sayLine('welcome.resume', { kind: 'welcome', mood: 'happy', buttons: [
           { label: this.t('resume'), value: 'tour:resume', primary: true },
-          { label: this.t('notNow'), value: 'dismiss' },
+          { label: this.t('notNow'), value: 'tour:later' },
         ] });
       } else if (visits <= 1) {
         if (!this.tour.length) return this.sayLine('welcome.hello', { kind: 'welcome', mood: 'happy' });
@@ -404,11 +412,20 @@ export class Guide {
   }
 
   private onSection(id: string | null): void {
-    if (!id || this.state.hidden || this.state.tour || this.state.chatOpen || this.state.bubble?.sticky) return;
+    this.pendingTip = null;
+    this.clearTimer('tip-retry');
+    if (!id || this.state.hidden) return;
     const tip = this.config.sections?.find((s) => s.id === id);
     if (!tip || this.shownTips.has(id)) return;
     const now = this.sched.now();
-    if (now - this.lastTipAt < (this.config.tipGapMs ?? 8000)) return;
+    const wait = (this.config.tipGapMs ?? 8000) - (now - this.lastTipAt);
+    const busy = !!(this.state.tour || this.state.chatOpen || this.state.bubble?.sticky || this.state.acting || this.overlayOpen());
+    if (busy || wait > 0) {
+      // Keep the tip for this section and try again once the way is clear.
+      this.pendingTip = id;
+      this.timer('tip-retry', busy ? 2000 : wait + 50, () => this.pendingTip && this.onSection(this.pendingTip));
+      return;
+    }
     const regular = this.help() === 'tips';
     const seen = this.memory.get('seenTips');
     if (regular && seen.includes(id) && !tip.advanced) return;
