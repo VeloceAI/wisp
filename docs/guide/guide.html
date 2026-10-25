@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Wisp — Make your own living guide</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 11.5pt/1.55 "Segoe UI", system-ui, sans-serif; color: #241f36; }
+  .page { width: 210mm; height: 297mm; padding: 18mm 18mm 16mm; position: relative; page-break-after: always; overflow: hidden; }
+  .page:last-child { page-break-after: auto; }
+  .foot { position: absolute; bottom: 9mm; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: #8a86a0; }
+  h1 { font-size: 30pt; line-height: 1.1; margin: 0 0 6mm; letter-spacing: -0.5px; }
+  h2 { font-size: 19pt; margin: 0 0 3mm; letter-spacing: -0.3px; }
+  h3 { font-size: 12.5pt; margin: 5mm 0 1.5mm; }
+  p { margin: 0 0 3mm; }
+  .kicker { color: #5d4be0; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; font-size: 9pt; margin-bottom: 2mm; }
+  .lead { font-size: 13pt; color: #4b4663; }
+  code, pre { font-family: Consolas, "Cascadia Mono", monospace; font-size: 9.2pt; }
+  pre { background: #1f1b33; color: #ece9ff; padding: 4mm 5mm; border-radius: 3mm; margin: 2mm 0 4mm; white-space: pre-wrap; line-height: 1.45; }
+  code { background: #efecfb; padding: 0 1.2mm; border-radius: 1mm; }
+  pre code { background: none; padding: 0; }
+  img { max-width: 100%; display: block; }
+  .shot { border-radius: 3mm; box-shadow: 0 1mm 4mm rgba(30,20,70,.18); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .card { background: #f7f5fd; border-radius: 3mm; padding: 4mm; }
+  .card b { display: block; margin-bottom: 1mm; }
+  .cap { font-size: 9pt; color: #6b6880; margin-top: 1.5mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.8pt; margin: 2mm 0 4mm; }
+  th, td { text-align: left; padding: 1.8mm 2mm; border-bottom: 1px solid #e6e2f3; vertical-align: top; }
+  th { color: #5d4be0; font-size: 9pt; text-transform: uppercase; letter-spacing: .6px; }
+  .step { display: inline-block; background: #5d4be0; color: #fff; border-radius: 99px; padding: .6mm 3mm; font-size: 9pt; font-weight: 700; margin-right: 2mm; }
+  .cover { background: radial-gradient(circle at 70% 30%, #ece8ff, #fbf8f4 60%); display: flex; flex-direction: column; justify-content: center; }
+  .cover img.hero { width: 70mm; margin: 0 0 8mm -4mm; }
+  .safe li { margin-bottom: 1.5mm; }
+  ul { margin: 0 0 3mm; padding-left: 5mm; }
+</style>
+</head>
+<body>
+
+<section class="page cover">
+  <img class="hero" src="../assets/characters/wisp.svg" alt="" />
+  <div class="kicker">VeloceAI · Wisp guide</div>
+  <h1>Make your own<br />living guide</h1>
+  <p class="lead">Wisp is a small animated character that welcomes your visitors, shows them around, answers their questions in their own language, reads the page, and helps them get things done. It works on any website, inside React, Next.js and Vue apps, and in desktop apps.</p>
+  <p class="lead">This guide shows how to add it in one line, give it your own look, and teach it about your product.</p>
+  <img src="../assets/lineup.svg" alt="" style="margin-top:10mm" />
+  <div class="foot"><span>github.com/VeloceAI/wisp</span><span>MIT licence · our own code and art</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker">What it does</div>
+  <h2>A guide that feels alive, and actually helps</h2>
+  <div class="grid2">
+    <div><img class="shot" src="../assets/screens/tour.png" alt="" /><div class="cap"><b>Tours.</b> New visitors get a short walkthrough, step by step.</div></div>
+    <div><img class="shot" src="../assets/screens/tip.png" alt="" /><div class="cap"><b>Tips.</b> One short tip beside the section being read.</div></div>
+    <div><img class="shot" src="../assets/screens/chat-hinglish.png" alt="" /><div class="cap"><b>Chat.</b> Answers from your FAQ and pages, in English, Hindi, Hinglish or any language you add.</div></div>
+    <div><img class="shot" src="../assets/screens/explain.png" alt="" /><div class="cap"><b>Understands the page.</b> Explains what's here and points at things.</div></div>
+    <div><img class="shot" src="../assets/screens/action.png" alt="" /><div class="cap"><b>Does things.</b> "Search red dress under ₹2000 and sort by price", step by step, with a Stop button.</div></div>
+    <div><img class="shot" src="../assets/screens/error.png" alt="" /><div class="cap"><b>Reacts.</b> Celebrates success, explains errors in plain English.</div></div>
+  </div>
+  <div class="foot"><span>Wisp guide</span><span>2</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker">The character</div>
+  <h2>12 moods, any look</h2>
+  <p>Every character is drawn by Wisp itself from a short description, so it stays sharp at any size and every mood works with every look. It blinks, breathes, follows the cursor, giggles when tapped, and falls asleep when the visitor is idle. People who turn on "reduce motion" get a calm, still version.</p>
+  <img src="../assets/moods-wisp.svg" alt="" style="margin:3mm 0 5mm" />
+  <img src="../assets/moods-mochi.svg" alt="" />
+  <table>
+    <tr><th>Mood</th><th>When it shows</th></tr>
+    <tr><td>waking, happy</td><td>The visitor arrives, taps it, or comes back</td></tr>
+    <tr><td>talking, thinking</td><td>It speaks; it's working something out or the page is loading</td></tr>
+    <tr><td>excited, celebrate</td><td>A goal is reached: order placed, account created</td></tr>
+    <tr><td>confused, worried</td><td>An error, or before something final like paying</td></tr>
+    <tr><td>sleepy, sleeping, shy, idle</td><td>Nobody's around, it's tapped a lot, or it's just waiting</td></tr>
+  </table>
+  <div class="foot"><span>Wisp guide</span><span>3</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker"><span class="step">Step 1</span>Add it</div>
+  <h2>One line on any website</h2>
+  <pre><code>&lt;script src="/wisp.js" data-config="/wisp.json" defer&gt;&lt;/script&gt;</code></pre>
+  <p><code>wisp.js</code> is built to <code>packages/web/dist/wisp.js</code> (about 22 KB zipped). Put it next to your site and write <code>wisp.json</code> (step 3). That's all; it works with no AI.</p>
+  <h3>React and Next.js</h3>
+  <pre><code>import { Wisp } from '@veloceai/wisp-react';
+const router = useRouter();
+
+&lt;Wisp config={config} navigate={(path) =&gt; router.push(path)}&gt;
+  &lt;App /&gt;
+&lt;/Wisp&gt;</code></pre>
+  <h3>Vue</h3>
+  <pre><code>&lt;Wisp :config="config"&gt;&lt;App /&gt;&lt;/Wisp&gt;   // from '@veloceai/wisp-vue'</code></pre>
+  <h3>Desktop apps</h3>
+  <p>Electron and Tauri apps use the web build as is. Keep any AI key in the system keychain, never in the app's web code.</p>
+  <h3>Phones</h3>
+  <img class="shot" src="../assets/screens/phone.png" alt="" style="width:46mm; height:92mm; object-fit:cover; object-position:top; float:right; margin:0 0 3mm 5mm" />
+  <p>On phones Wisp stays small in a bottom corner and moves away if it would cover a button. If your app has a bottom tab bar, tell it how tall: <code>"insets": { "bottom": 64 }</code>.</p>
+  <p>A small × hides it into a tab at the edge; it remembers that.</p>
+  <div class="foot"><span>Wisp guide</span><span>4</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker"><span class="step">Step 2</span>Your own character</div>
+  <h2>Describe it, Wisp draws it</h2>
+  <div class="grid2">
+    <pre><code>"character": {
+  "name": "Tara",
+  "body": {
+    "shape": "blob",
+    "color": "#FF8A4C",
+    "shade": "#E2552B",
+    "glow":  "#FFD0A8"
+  },
+  "eyes":  { "style": "sparkle" },
+  "mouth": { "style": "cat" },
+  "accessory": {
+    "kind": "antenna",
+    "color": "#FFD166"
+  }
+}</code></pre>
+    <div>
+      <table>
+        <tr><th>Part</th><th>Choices</th></tr>
+        <tr><td>shape</td><td>wisp, round, squircle, blob, bean</td></tr>
+        <tr><td>eyes</td><td>classic, dot, sparkle · size, spacing, height</td></tr>
+        <tr><td>mouth</td><td>smile, cat, tiny</td></tr>
+        <tr><td>accessory</td><td>none, antenna, sprout, ears, crown</td></tr>
+        <tr><td>colours</td><td>body, shade, glow, belly, outline, cheeks</td></tr>
+      </table>
+      <p>Or start from a sample: <code>"character": "ember"</code>.</p>
+    </div>
+  </div>
+  <h3>Size and style</h3>
+  <pre><code>"size":  { "desktop": "large", "phone": "small" },     // or a number of pixels
+"theme": { "accent": "#E2552B", "font": "Poppins, sans-serif", "radius": 8, "mode": "auto" }</code></pre>
+  <p>Changing the look never changes behaviour. Wisp lives in its own walled-off layer, so your site's styles can't break it and it can't break your site.</p>
+  <img src="../assets/moods-ember.svg" alt="" style="margin-top:3mm" />
+  <div class="foot"><span>Wisp guide</span><span>5</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker"><span class="step">Step 3</span>Teach it your product</div>
+  <h2>Write what it should say</h2>
+  <pre><code>{
+  "siteId": "my-shop",
+  "tour": [
+    { "target": "#search", "text": "Search any dress here." },
+    { "target": "#sort",   "text": { "en": "Sort by price.", "hinglish": "Price se sort karo." } }
+  ],
+  "sections": [ { "id": "pricing", "tip": "The free plan covers one project." } ],
+  "faq": [
+    { "q": ["How long is delivery?", { "hinglish": "Delivery kitne din mein?" }],
+      "a": { "en": "3 to 5 days.", "hi": "3 से 5 दिन।", "hinglish": "3 se 5 din." } }
+  ],
+  "errors":    [ { "match": "card_declined", "fix": "Your card was declined. Try UPI instead." } ],
+  "reactions": { "cart-add": { "mood": "happy", "line": "Nice pick!" } }
+}</code></pre>
+  <ul>
+    <li>Mark sections with <code>data-wisp-section="pricing"</code> so it knows where tips belong.</li>
+    <li>Tell it what happens in your app with window events: <code>wisp:success</code>, <code>wisp:error</code>, <code>wisp:loading</code>, <code>wisp:loaded</code>, <code>wisp:conversion</code>, or any name under "reactions".</li>
+    <li>Any language: write <code>{ "ta": "…" }</code> and list it under <code>"languages"</code>. Button labels go under <code>"ui"</code>.</li>
+    <li>New visitors get step-by-step help; regulars get short advanced tips. Visitors can switch between "Help me a lot" and "Just tips".</li>
+  </ul>
+  <div class="foot"><span>Wisp guide</span><span>6</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker"><span class="step">Step 4</span>Optional extras</div>
+  <h2>Your own AI key, voice, and actions</h2>
+  <h3>AI from any provider</h3>
+  <p>OpenAI, Anthropic, Gemini, Groq, OpenRouter or a local Ollama. The key stays on your server in a tiny proxy; visitors' browsers never see it.</p>
+  <pre><code>WISP_PROVIDER=gemini WISP_API_KEY=… WISP_ORIGINS=https://myshop.in npx wisp-proxy
+// then in wisp.json:  "ai": { "endpoint": "https://myshop.in/wisp" }</code></pre>
+  <p>Built-in cost limits: 20 AI calls per visitor a day, an 8-second timeout, and prewritten answers whenever the AI is off, slow or over its limit. Questions your FAQ already answers never call the AI.</p>
+  <h3>Voice (off until the visitor turns it on)</h3>
+  <p>The device's own voice for free, or a natural AI voice through the proxy. Each line is spoken once and then reused at no cost. A mic button lets visitors ask out loud.</p>
+  <h3>Let it do things</h3>
+  <pre><code>"actions": [
+  { "name": "search", "description": "Search products", "params": { "query": { "type": "string" } } },
+  { "name": "track-order", "description": "Track my order", "button": "Track my order" },
+  { "name": "place-order", "description": "Place the order", "final": true }
+]
+Wisp.instance.registerAction('search', ({ query }) =&gt; runMySearch(query));</code></pre>
+  <div class="foot"><span>Wisp guide</span><span>7</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker">Safety</div>
+  <h2>Rules it always follows</h2>
+  <ul class="safe">
+    <li><b>Asks before anything final:</b> pay, buy, place order, delete, send, submit, sign up, log out, or leaving your site.</li>
+    <li><b>Never touches private fields:</b> passwords, card numbers, OTP, CVV, PIN and ID numbers are never read, typed into, or sent to an AI. Mark anything else with <code>data-wisp-sensitive</code>.</li>
+    <li><b>Stays out of blocked areas:</b> <code>data-wisp="off"</code> on an element, or <code>"blocked": { "selectors": [".admin"], "paths": ["/admin*"] }</code>.</li>
+    <li><b>Keys stay on the server:</b> websites use the proxy; desktop apps use the system keychain.</li>
+    <li><b>Always stoppable:</b> a Stop button stays up while it acts.</li>
+    <li><b>Polite:</b> one unasked tip at a time, at most every 8 seconds, each tip once, and it waits while your own dialogs are open.</li>
+  </ul>
+  <h3>Checklist before you go live</h3>
+  <table>
+    <tr><td>☐</td><td>Welcome and tour work on your home page</td></tr>
+    <tr><td>☐</td><td>Each key section has a short tip</td></tr>
+    <tr><td>☐</td><td>10+ real FAQ answers, in the languages your visitors use</td></tr>
+    <tr><td>☐</td><td>Success and error events fire at the right moments</td></tr>
+    <tr><td>☐</td><td>Private areas are blocked; private inputs are marked</td></tr>
+    <tr><td>☐</td><td>On a phone it doesn't cover your buttons or tab bar</td></tr>
+    <tr><td>☐</td><td>If AI is on: the key is only on the server and origins are set</td></tr>
+  </table>
+  <p>Full reference, a demo shop and a one-minute video: <b>github.com/VeloceAI/wisp</b>.</p>
+  <img src="../assets/lineup.svg" alt="" style="margin-top:4mm" />
+  <div class="foot"><span>Wisp guide</span><span>8</span></div>
+</section>
+
+</body>
+</html>

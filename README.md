@@ -1,8 +1,47 @@
-# Wisp
+<p align="center"><img src="docs/assets/wisp.gif" width="200" alt="Wisp, the animated guide character" /></p>
 
-A small living character that guides people around your website or app. It welcomes visitors, runs tours, gives a short tip beside the section they're reading, reacts to what happens in your app, and answers questions from your own FAQ and pages. It works with no AI at all; AI keys, voice, page reading and actions come next.
+<h1 align="center">Wisp</h1>
 
-MIT licensed. All code and character art are our own.
+<p align="center"><b>A living character guide for any website, app or desktop app.</b><br/>
+It welcomes visitors, shows them around, answers in their language, reads the page, and helps them get things done.</p>
+
+<p align="center">
+  <a href="docs/wisp-demo.mp4">▶ Watch the 1-minute video</a> ·
+  <a href="docs/Wisp-Guide.pdf">📘 Read the PDF guide</a> ·
+  <a href="#run-the-demo">🛍 Try the demo shop</a>
+</p>
+
+<p align="center"><a href="docs/wisp-demo.mp4"><img src="docs/assets/demo.gif" width="720" alt="Wisp on a demo shop: tour, tips, Hinglish chat, pointing, actions and error help" /></a></p>
+
+## Meet the characters
+
+Each product gets its own look from one short description. These five samples come built in:
+
+<p align="center"><img src="docs/assets/lineup.svg" alt="Wisp, Ember, Sprout, Bolt and Mochi" /></p>
+
+Every character has 12 moods. It blinks, breathes, follows the cursor, giggles when tapped, and falls asleep when nobody is around:
+
+<p align="center"><img src="docs/assets/moods-wisp.svg" alt="The 12 moods: idle, waking, thinking, talking, happy, excited, celebrate, confused, worried, sleepy, sleeping, shy" /></p>
+
+<details><summary>Moods for the other samples</summary>
+
+<img src="docs/assets/moods-ember.svg" alt="Ember moods" />
+<img src="docs/assets/moods-sprout.svg" alt="Sprout moods" />
+<img src="docs/assets/moods-bolt.svg" alt="Bolt moods" />
+<img src="docs/assets/moods-mochi.svg" alt="Mochi moods" />
+</details>
+
+## What it does
+
+| | |
+|---|---|
+| <img src="docs/assets/screens/tour.png" width="420" /><br/>**Tours** for new visitors, step by step | <img src="docs/assets/screens/tip.png" width="420" /><br/>**One short tip** beside the section being read |
+| <img src="docs/assets/screens/chat-hinglish.png" width="420" /><br/>**Chat** from your own FAQ and pages, in English, Hindi, Hinglish or any language you add | <img src="docs/assets/screens/explain.png" width="420" /><br/>**Understands the page**: explains it, finds things, points at them |
+| <img src="docs/assets/screens/action.png" width="420" /><br/>**Does things** when asked, step by step, with a Stop button and a check before anything final | <img src="docs/assets/screens/error.png" width="420" /><br/>**Reacts to your app**: celebrates success, explains errors in plain English |
+
+It works fully **without AI**: moods, tours, prewritten tips, keyword FAQ chat with tap-to-answer buttons, button-driven actions and the device's own voice. Add **your own AI key** from any provider when you want it to answer in its own words.
+
+<p align="center"><img src="docs/assets/screens/phone.png" width="260" alt="Wisp on a phone" /><br/><sub>On phones it stays small in a corner and never sits on your buttons.</sub></p>
 
 ## Add it to any site in one line
 
@@ -197,13 +236,22 @@ Visitors switch it on in settings. `"voice": { "mode": "browser" }` uses the dev
 | `@veloceai/wisp-react`, `@veloceai/wisp-vue` | Thin wrappers. |
 | `@veloceai/wisp-proxy` | The owner-hosted AI proxy (`wisp-proxy` CLI, web handler, Node adapter). |
 
-## Develop
+## Run the demo
 
 ```bash
 npm install
-npm test
 npm run build
 npm run demo        # http://localhost:5180 — demo shop (with a mock-AI proxy at /wisp), /moods.html, /script-tag.html
+```
+
+## Develop
+
+```bash
+npm test            # 100 tests: core, web (jsdom), proxy
+npm run typecheck
+npm run docs:art    # redraws the character images and the animated GIF from the real drawing code
+npm run docs:video  # records docs/wisp-demo.mp4 and the screenshots from the running demo (needs Chrome and ffmpeg)
+npm run docs:pdf    # prints docs/guide/guide.html to docs/Wisp-Guide.pdf
 ```
 
 ## Roadmap

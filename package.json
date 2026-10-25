@@ -11,14 +11,20 @@
     "build": "npm run build -w @veloceai/wisp-core -w @veloceai/wisp-web -w @veloceai/wisp-proxy -w @veloceai/wisp-react -w @veloceai/wisp-vue",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "demo": "npm run dev -w wisp-demo"
+    "demo": "npm run dev -w wisp-demo",
+    "docs:art": "tsx scripts/docs/render-characters.ts",
+    "docs:video": "tsx scripts/docs/record-demo.ts",
+    "docs:pdf": "tsx scripts/docs/build-pdf.ts"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.31",
     "jsdom": "^26.1.0",
+    "puppeteer-core": "^24.43.1",
     "react": "^18.3.1",
     "tsup": "^8.5.0",
+    "tsx": "^4.23.15",
     "typescript": "~5.9.3",
     "vite": "^7.1.0",
     "vitest": "^3.2.4",
