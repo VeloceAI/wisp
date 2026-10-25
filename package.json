@@ -1,0 +1,24 @@
+{
+  "name": "wisp",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @veloceai/wisp-core -w @veloceai/wisp-web -w @veloceai/wisp-proxy -w @veloceai/wisp-react -w @veloceai/wisp-vue",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "demo": "npm run dev -w wisp-demo"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "jsdom": "^26.1.0",
+    "tsup": "^8.5.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.0",
+    "vitest": "^3.2.4"
+  }
+}

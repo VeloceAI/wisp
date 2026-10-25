@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Petal & Thread — Wisp demo</title>
+    <link rel="stylesheet" href="/src/demo.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="logo" href="#">Petal &amp; Thread</a>
+      <nav>
+        <a href="#shop">Shop</a>
+        <a href="#delivery">Delivery</a>
+        <a href="#faq">Help</a>
+        <a id="cart" href="#" aria-label="Cart">🛒 <span id="cart-count">0</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" data-wisp-section="hero">
+        <h1>Handmade dresses, delivered across India</h1>
+        <p>Soft cotton, bright colours, made by small studios.</p>
+        <form id="search" class="search" role="search">
+          <input id="search-input" type="search" name="q" placeholder="Search dresses, kurtas, tops…" aria-label="Search products" />
+          <input id="max-price" type="number" name="max" placeholder="Max ₹" aria-label="Maximum price" min="0" />
+          <button type="submit">Search</button>
+        </form>
+      </section>
+
+      <section id="shop" class="shop" data-wisp-section="shop">
+        <div class="shop-head">
+          <h2>Shop</h2>
+          <label>Sort by
+            <select id="sort" aria-label="Sort products">
+              <option value="popular">Popular</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+            </select>
+          </label>
+        </div>
+        <div id="products" class="grid"></div>
+      </section>
+
+      <section id="delivery" class="info" data-wisp-section="delivery">
+        <h2>Delivery &amp; returns</h2>
+        <p>We ship to every pin code in India. Delivery takes 3 to 5 days in metros and up to 7 days elsewhere.</p>
+        <p>Free returns within 7 days from My Orders. Refunds reach your account in 2 to 3 working days.</p>
+      </section>
+
+      <section id="account" class="info" data-wisp-section="account">
+        <h2>Create your account</h2>
+        <form id="signup" class="signup">
+          <label>Email <input type="email" name="email" autocomplete="email" /></label>
+          <label>Password <input type="password" name="password" autocomplete="new-password" /></label>
+          <button type="submit">Sign up</button>
+        </form>
+      </section>
+
+      <section id="faq" class="info" data-wisp-section="faq">
+        <h2>Try the guide</h2>
+        <p>These buttons send app events to Wisp, the way a real site would after a save, an error or a slow load.</p>
+        <div class="try">
+          <button data-fire="success">Order placed ✓</button>
+          <button data-fire="error">Payment failed</button>
+          <button data-fire="loading">Start loading</button>
+          <button data-fire="loaded">Finish loading</button>
+          <button data-fire="tour">Start the tour</button>
+          <button data-fire="reset">Forget me (reset)</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">Demo shop for Wisp. Nothing here is real.</footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

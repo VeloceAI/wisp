@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wisp moods</title>
+    <style>
+      body { margin: 0; padding: 24px; font: 14px system-ui, sans-serif; background: #fbf8f4; color: #24202f; }
+      h2 { margin: 28px 0 8px; }
+      .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+      figure { margin: 0; background: #fff; border-radius: 14px; padding: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+      figure svg { width: 140px; height: 140px; overflow: visible; }
+      figcaption { color: #6b6880; }
+    </style>
+  </head>
+  <body>
+    <h1>Wisp moods</h1>
+    <div id="out"></div>
+    <script type="module" src="/src/moods.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "@veloceai/wisp-web",
+  "version": "0.1.0",
+  "description": "Wisp for the web: a living character guide in one script tag.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/wisp.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./wisp.js": "./dist/wisp.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean && tsup src/auto.ts --format iife --global-name WispAuto --minify --no-dts --out-dir dist --entry.wisp=src/auto.ts"
+  },
+  "dependencies": {
+    "@veloceai/wisp-core": "0.1.0"
+  }
+}

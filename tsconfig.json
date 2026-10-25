@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["node"],
+    "paths": {
+      "@veloceai/wisp-core": ["packages/core/src/index.ts"],
+      "@veloceai/wisp-web": ["packages/web/src/index.ts"],
+      "@veloceai/wisp-proxy": ["packages/proxy/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src", "packages/*/test", "apps/demo/src"]
+}

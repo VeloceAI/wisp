@@ -1,0 +1,30 @@
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #24202f; background: #fbf8f4; }
+a { color: inherit; }
+.top { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 5; }
+.logo { font-weight: 700; text-decoration: none; font-size: 18px; }
+nav { display: flex; gap: 18px; }
+nav a { text-decoration: none; }
+main { max-width: 1040px; margin: 0 auto; padding: 0 20px 120px; }
+.hero { padding: 72px 0 48px; }
+.hero h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.15; margin: 0 0 12px; max-width: 640px; }
+.search { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; max-width: 640px; }
+.search input, select, .signup input { padding: 11px 14px; border: 1px solid #ddd; border-radius: 10px; font: inherit; background: #fff; }
+.search input[type="search"] { flex: 1 1 260px; }
+.search input[type="number"] { width: 120px; }
+button { font: inherit; padding: 11px 18px; border-radius: 10px; border: 0; background: #2c2440; color: #fff; cursor: pointer; }
+button:hover { filter: brightness(1.15); }
+.shop { padding: 40px 0; }
+.shop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; margin-top: 18px; }
+.card { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.swatch { height: 150px; border-radius: 10px; margin-bottom: 10px; }
+.card h3 { margin: 0; font-size: 16px; }
+.card .price { color: #6b6880; margin: 4px 0 10px; }
+.card button { width: 100%; padding: 9px; }
+.info { padding: 48px 0; border-top: 1px solid #eee; min-height: 60vh; }
+.signup { display: grid; gap: 12px; max-width: 360px; }
+.signup label { display: grid; gap: 4px; font-size: 14px; }
+.try { display: flex; flex-wrap: wrap; gap: 10px; }
+.foot { text-align: center; color: #888; padding: 40px; }
+.empty { color: #888; }
