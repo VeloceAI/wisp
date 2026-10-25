@@ -10,6 +10,11 @@ export const DEFAULT_LINES: LineBank = {
     hi: ['नमस्ते, मैं {name} हूँ! क्या आप एक छोटा टूर लेना चाहेंगे?'],
     hinglish: ['Hi, main {name} hoon! Ek chhota sa tour karein?'],
   },
+  'welcome.hello': {
+    en: ["Hi, I'm {name}! Tap me any time you need help.", "Hello! I'm {name}. Tap me if you have a question."],
+    hi: ['नमस्ते, मैं {name} हूँ! मदद चाहिए तो मुझे टैप करें।'],
+    hinglish: ['Hi, main {name} hoon! Help chahiye toh mujhe tap karo.'],
+  },
   'welcome.back': {
     en: ['Welcome back!', 'Good to see you again!', 'Hey, you’re back!'],
     hi: ['फिर से स्वागत है!', 'आपको फिर देखकर अच्छा लगा!'],

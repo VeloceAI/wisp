@@ -31,8 +31,8 @@ export const STYLES = `
 .bubble { position: absolute; left: 0; top: 0; max-width: min(300px, calc(100vw - 24px)); pointer-events: auto;
   background: var(--wisp-paper); color: var(--wisp-ink); border-radius: 16px; padding: 12px 14px;
   box-shadow: 0 8px 30px rgba(20,10,60,.18), 0 0 0 1px var(--wisp-line);
-  opacity: 0; transform: translateY(6px) scale(.97); transition: opacity .2s, transform .25s; }
-.bubble.show { opacity: 1; transform: none; }
+  opacity: 0; scale: .96; visibility: hidden; transition: opacity .2s, scale .25s, visibility 0s .2s; }
+.bubble.show { opacity: 1; scale: 1; visibility: visible; transition: opacity .2s, scale .25s; }
 .bubble .title { font-size: 12px; font-weight: 600; color: var(--wisp-accent); margin-bottom: 4px; }
 .bubble .x { all: unset; position: absolute; top: 6px; right: 8px; color: var(--wisp-muted); cursor: pointer; font-size: 14px; padding: 2px 4px; }
 .bubble .text { padding-right: 14px; }

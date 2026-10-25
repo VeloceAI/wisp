@@ -28,7 +28,7 @@ const SYNONYMS: Record<string, string> = {
   bhugtan: 'payment', pay: 'payment', paying: 'payment', payments: 'payment', भुगतान: 'payment', पेमेंट: 'payment', upi: 'payment',
   khoj: 'search', dhundo: 'search', dhoondo: 'search', dhundhna: 'search', find: 'search', खोज: 'search', खोजें: 'search',
   sasta: 'cheap', saste: 'cheap', सस्ता: 'cheap',
-  samay: 'time', time: 'time', samai: 'time', समय: 'time',
+  samay: 'time', time: 'time', samai: 'time', समय: 'time', long: 'time', soon: 'time', fast: 'time', quickly: 'time',
   din: 'days', days: 'days', day: 'days', दिन: 'days',
   contact: 'contact', sampark: 'contact', संपर्क: 'contact', phone: 'contact', email: 'contact',
 };

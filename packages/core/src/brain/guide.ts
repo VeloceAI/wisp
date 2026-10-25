@@ -284,10 +284,11 @@ export class Guide {
           { label: this.t('notNow'), value: 'dismiss' },
         ] });
       } else if (visits <= 1) {
-        const buttons: Button[] = this.tour.length
-          ? [{ label: this.t('tourStart'), value: 'tour:start', primary: true }, { label: this.t('notNow'), value: 'dismiss' }]
-          : [];
-        this.sayLine('welcome.first', { kind: 'welcome', mood: 'happy', buttons });
+        if (!this.tour.length) return this.sayLine('welcome.hello', { kind: 'welcome', mood: 'happy' });
+        this.sayLine('welcome.first', { kind: 'welcome', mood: 'happy', buttons: [
+          { label: this.t('tourStart'), value: 'tour:start', primary: true },
+          { label: this.t('notNow'), value: 'dismiss' },
+        ] });
       } else {
         this.sayLine('welcome.back', { kind: 'welcome', mood: 'happy' });
       }

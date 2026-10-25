@@ -1,0 +1,115 @@
+# Wisp
+
+A small living character that guides people around your website or app. It welcomes visitors, runs tours, gives a short tip beside the section they're reading, reacts to what happens in your app, and answers questions from your own FAQ and pages. It works with no AI at all; AI keys, voice, page reading and actions come next.
+
+MIT licensed. All code and character art are our own.
+
+## Add it to any site in one line
+
+```html
+<script src="https://YOUR-CDN/wisp.js" data-config="/wisp.json" defer></script>
+```
+
+`wisp.js` is built to `packages/web/dist/wisp.js` (about 22 KB gzipped). `wisp.json` is your settings file:
+
+```json
+{
+  "siteId": "my-shop",
+  "character": "wisp",
+  "tour": [{ "target": "#search", "text": "Search anything here." }],
+  "sections": [{ "id": "pricing", "tip": "The free plan covers one project." }],
+  "faq": [
+    { "q": ["How long is delivery?", { "hinglish": "Delivery kitne din mein?" }],
+      "a": { "en": "3 to 5 days.", "hi": "3 से 5 दिन।", "hinglish": "3 se 5 din." } }
+  ],
+  "errors": [{ "match": "card_declined", "fix": "Your card was declined. Try UPI instead." }]
+}
+```
+
+Mark the sections it should comment on with `data-wisp-section="pricing"`, or give a `selector` in the config.
+
+## Tell it what's happening
+
+Fire window events from your app; Wisp never touches your forms.
+
+```js
+dispatchEvent(new CustomEvent('wisp:success', { detail: { line: 'Saved!' } }));
+dispatchEvent(new CustomEvent('wisp:error', { detail: { code: 'card_declined', message: '…' } }));
+dispatchEvent(new CustomEvent('wisp:loading'));   // thinking pose
+dispatchEvent(new CustomEvent('wisp:loaded'));
+dispatchEvent(new CustomEvent('wisp:conversion'));
+dispatchEvent(new CustomEvent('wisp:cart-add'));  // any name listed under "reactions"
+```
+
+Or use the instance: `Wisp.instance.say('Hi!', 'happy')`, `.startTour()`, `.openChat()`, `.hide()`.
+
+## React / Next.js and Vue
+
+```tsx
+import { Wisp, useWisp } from '@veloceai/wisp-react';
+<Wisp config={config}><App /></Wisp>
+// anywhere inside: useWisp()?.emit('success')
+```
+
+```vue
+<script setup>import { Wisp } from '@veloceai/wisp-vue';</script>
+<template><Wisp :config="config"><App /></Wisp></template>
+```
+
+Electron and Tauri apps use the web build as is.
+
+## Its own look
+
+Pick a sample (`wisp`, `ember`, `sprout`, `bolt`, `mochi`) or describe your own:
+
+```json
+"character": {
+  "name": "Tara",
+  "body": { "shape": "blob", "color": "#FF8A4C", "shade": "#E2552B", "glow": "#FFD0A8" },
+  "eyes": { "style": "sparkle", "color": "#3A1406" },
+  "mouth": { "style": "cat" },
+  "accessory": { "kind": "antenna", "color": "#FFD166" }
+}
+```
+
+Shapes: `wisp`, `round`, `squircle`, `blob`, `bean`. Eyes: `classic`, `dot`, `sparkle`. Mouths: `smile`, `cat`, `tiny`. Accessories: `antenna`, `sprout`, `ears`, `crown`.
+
+Moods: idle, waking, thinking, talking, happy, excited, celebrate, confused, worried, sleepy, sleeping, shy. It blinks, breathes, follows the cursor, giggles when tapped, sleeps when the visitor is idle, and keeps still for people who turn on reduced motion.
+
+## Languages
+
+Built-in lines are in English, Hindi and Hinglish. The visitor's language is picked up from what they type. Add any other language by writing your FAQ, tips and lines with that code (`{ "ta": "…" }`) and button labels under `"ui"`; list them in `"languages"` to show them in settings.
+
+## Behaviour that keeps it polite
+
+- Sits in a corner, hops beside what you're reading on bigger screens, and on phones never sits on top of buttons (it moves, then shrinks).
+- One unasked-for tip at a time, at most every 8 seconds, each tip once.
+- New visitors get step-by-step help; regulars get short advanced tips. Visitors can choose "Help me a lot" or "Just tips". It always answers when tapped.
+- A hide button tucks it into a small tab; it remembers that.
+
+## Packages
+
+| Package | What |
+|---|---|
+| `@veloceai/wisp-core` | The brain, moods, drawing maths, chat and memory. No UI. |
+| `@veloceai/wisp-web` | The page widget and the `wisp.js` script-tag build. |
+| `@veloceai/wisp-react`, `@veloceai/wisp-vue` | Thin wrappers. |
+
+## Develop
+
+```bash
+npm install
+npm test
+npm run build
+npm run demo        # http://localhost:5180 — demo shop, /moods.html, /script-tag.html
+```
+
+## Roadmap
+
+1. ✅ Core + web: character, moods, guiding, chat without AI, demo
+2. Your own AI key (OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama) through a tiny server you host, plus voice
+3. Page understanding: explain the page, find and point at things
+4. Actions on request, always asking before anything final
+5. Expo / React Native
+6. Adaptive memory and an owner report
+7. Browser extension

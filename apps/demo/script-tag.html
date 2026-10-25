@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wisp in one line</title>
+    <style>
+      body { margin: 0; padding: 48px 24px; font: 16px/1.6 system-ui, sans-serif; background: #f6fbf8; color: #1d2b24; }
+      main { max-width: 680px; margin: 0 auto; }
+      section { min-height: 70vh; border-top: 1px solid #dde9e2; padding-top: 24px; }
+      code { background: #e5f2ea; padding: 2px 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>A plain page with one script tag</h1>
+      <p>This page has no build step. Wisp comes from <code>&lt;script src="/wisp.js" data-config="/wisp.json"&gt;</code>.</p>
+      <section data-wisp-section="pricing">
+        <h2>Pricing</h2>
+        <p>Free for one project. Team plan is ₹499 a month.</p>
+      </section>
+      <section data-wisp-section="contact">
+        <h2>Contact</h2>
+        <p>Email us any time. We reply within a day.</p>
+      </section>
+    </main>
+    <script src="/wisp.js" data-config="/wisp.json" defer></script>
+  </body>
+</html>

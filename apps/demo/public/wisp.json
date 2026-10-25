@@ -1,0 +1,12 @@
+{
+  "siteId": "one-line-demo",
+  "character": "sprout",
+  "sections": [
+    { "id": "pricing", "tip": { "en": "The free plan covers one project.", "hi": "फ्री प्लान में एक प्रोजेक्ट शामिल है।", "hinglish": "Free plan mein ek project milta hai." } },
+    { "id": "contact", "tip": "We usually reply within a day." }
+  ],
+  "faq": [
+    { "q": ["How much does it cost?", { "hinglish": "Kitne ka hai?" }], "a": { "en": "Free for one project; the team plan is ₹499 a month.", "hinglish": "Ek project free hai; team plan ₹499 mahina." } },
+    { "q": "How do I contact you?", "a": "Email us any time. We reply within a day." }
+  ]
+}

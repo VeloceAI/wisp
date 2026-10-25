@@ -16,9 +16,11 @@
     },
     "./wisp.js": "./dist/wisp.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean && tsup src/auto.ts --format iife --global-name WispAuto --minify --no-dts --out-dir dist --entry.wisp=src/auto.ts"
+    "build": "tsup"
   },
   "dependencies": {
     "@veloceai/wisp-core": "0.1.0"

@@ -15,8 +15,8 @@ export interface Answerer {
   answer(question: string, lang: Lang): Promise<ChatAnswer>;
 }
 
+// Small FAQs make BM25 scores tiny, so confidence is judged by how much of the question matched.
 const MIN_COVERAGE = 0.5;
-const MIN_SCORE = 0.6;
 
 /** Answers from the site's own FAQ and content with keyword matching. No AI, no network. */
 export class FaqChat implements Answerer {
@@ -70,7 +70,7 @@ export class FaqChat implements Answerer {
   async answer(question: string, lang: Lang): Promise<ChatAnswer> {
     const hits = this.index.search(question, 4);
     const top = hits[0];
-    const confident = top && (top.coverage >= 1 || (top.coverage >= MIN_COVERAGE && top.score >= MIN_SCORE));
+    const confident = top && top.coverage >= MIN_COVERAGE;
     if (!top || !confident) {
       return { text: this.lines.pick('chat.unknown', lang), buttons: this.suggestions(lang), matched: false };
     }

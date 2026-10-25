@@ -19,20 +19,20 @@ MIT, our own code. Never use `@bible-strong/avatar-*` (AGPL).
 The character is drawn from pure geometry computed in core, so web (SVG DOM) and native (react-native-svg) renderers stay thin.
 
 ## Step 1 — core + web: character, moods, guiding, non-AI chat, demo
-- [ ] Repo init, workspace, tsconfig, vitest, build
-- [ ] core: character definition schema + defaults + 3 sample characters
-- [ ] core: 12 moods → face params; geometry builder; animator (blink, breathe, gaze, giggle, reduced motion)
-- [ ] core: lines bank (en/hi/hinglish), language detection, templating
-- [ ] core: guide brain — welcome, tour, section tips, app events (success/error/loading/idle), sleepy/sleeping, wake, tap/giggle, hide
-- [ ] core: FAQ/content search index (BM25, Hindi + Hinglish synonyms) + non-AI chat with tap-to-answer buttons
-- [ ] core: memory store (prefs: hidden, language, help level, tour progress, visits)
-- [ ] web: shadow-DOM shell, SVG renderer, bubble with buttons, chat panel, hide tab
-- [ ] web: placement — dock in corner, hop beside the section being read, never cover buttons on phones
-- [ ] web: watchers — sections in view, cursor gaze, idle, leave nudge, `wisp:*` DOM events
-- [ ] web: script-tag auto entry (`data-config`), IIFE build
-- [ ] react + vue wrappers
-- [ ] demo page on 5180
-- [ ] tests (core + web jsdom), browser check, README, push
+- [x] Repo init, workspace, tsconfig, vitest, build
+- [x] core: character definition schema + defaults + 3 sample characters
+- [x] core: 12 moods → face params; geometry builder; animator (blink, breathe, gaze, giggle, reduced motion)
+- [x] core: lines bank (en/hi/hinglish), language detection, templating
+- [x] core: guide brain — welcome, tour, section tips, app events (success/error/loading/idle), sleepy/sleeping, wake, tap/giggle, hide
+- [x] core: FAQ/content search index (BM25, Hindi + Hinglish synonyms) + non-AI chat with tap-to-answer buttons
+- [x] core: memory store (prefs: hidden, language, help level, tour progress, visits)
+- [x] web: shadow-DOM shell, SVG renderer, bubble with buttons, chat panel, hide tab
+- [x] web: placement — dock in corner, hop beside the section being read, never cover buttons on phones
+- [x] web: watchers — sections in view, cursor gaze, idle, leave nudge, `wisp:*` DOM events
+- [x] web: script-tag auto entry (`data-config`), IIFE build
+- [x] react + vue wrappers
+- [x] demo page on 5180
+- [x] tests (core + web jsdom), browser check, README, push
 
 ## Step 2 — AI providers + voice
 - [ ] Provider interface; OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama, Mock, Proxy client
@@ -56,4 +56,11 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 ## Step 7 — browser extension (later)
 
 ## Review
-(filled in at the end of each step)
+
+### Step 1 (2026-10-25)
+- Shipped: core brain + drawn character (5 shapes, 12 moods, 5 samples), web widget, script-tag bundle (63 KB, 22 KB gzip), React/Vue wrappers, demo shop, mood gallery, one-line demo page.
+- Tests: 43 passing (core flows, chat in en/hi/hinglish, drawing has no NaN, jsdom widget, placement).
+- Checked in the browser: welcome, tour with highlight and hops, section tips, Hinglish chat with UI switching language, error fix bubble, phone layout.
+- Found and fixed: FAQ matching too strict on small FAQs; character and bubble flew in from the corner on first paint; `hidden` ignored on reset buttons.
+- Language support opened up to any language code after the user asked.
+- `guide.ts` is 490 lines; split reactions out before it grows.
