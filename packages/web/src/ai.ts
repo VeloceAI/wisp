@@ -1,4 +1,4 @@
-import { AiAnswerer, redact, withTimeout, type ChatReply, type ChatTransport, type Guide, type KeyValueStore } from '@veloceai/wisp-core';
+import { AiAnswerer, pageFacts, redact, withTimeout, type ChatReply, type ChatTransport, type Guide, type KeyValueStore } from '@veloceai/wisp-core';
 
 /** A random id per browser so the proxy can cap AI calls per visitor. Not linked to the person. */
 export function visitorId(store: KeyValueStore): string {
@@ -35,6 +35,7 @@ export function connectAI(guide: Guide, store: KeyValueStore): void {
       guideName: guide.character.name,
       siteName: guide.config.siteName ?? document.title,
       history: () => guide.getState().messages,
+      extraContext: (q) => (guide.page ? pageFacts(guide.page.read(), q) : []),
       maxCalls: ai.maxCalls,
     }),
   );

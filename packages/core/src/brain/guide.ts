@@ -5,6 +5,7 @@ import { GuideMemory, InMemoryStore, type KeyValueStore } from '../memory/memory
 import type { Button, GuideConfig, HelpLevel } from './config';
 import { detectLang, langFromLocale, type Localized } from './lang';
 import { Lines, toLineSet, uiText, type UiStringKey } from './lines';
+import { answerPageQuestion, pageFallback, type PageSource } from './page-chat';
 import { reactToApp } from './reactions';
 import { TourRunner } from './tour';
 import {
@@ -26,6 +27,8 @@ export interface GuideDeps {
   hostLocale?: string;
   /** Replaces the keyword FAQ chat, e.g. with an AI answerer that falls back to it. */
   answerer?: Answerer;
+  /** Lets the guide read the current screen (web: the DOM reader). */
+  page?: PageSource;
 }
 
 export interface SayOptions {
@@ -68,6 +71,7 @@ export class Guide {
   private started = false;
   private tour: TourRunner;
   private random: () => number;
+  page: PageSource | null;
 
   constructor(config: GuideConfig = {}, deps: GuideDeps = {}) {
     this.config = config;
@@ -79,6 +83,7 @@ export class Guide {
     this.lines = new Lines(config.lines, deps.random);
     this.faq = new FaqChat(config.faq ?? [], config.content ?? [], this.lines);
     this.answerer = deps.answerer ?? this.faq;
+    this.page = deps.page ?? null;
     const lang =
       this.memory.get('lang') ??
       (config.language && config.language !== 'auto' ? config.language : langFromLocale(deps.hostLocale));
@@ -118,6 +123,17 @@ export class Guide {
 
   setAnswerer(answerer: Answerer): void {
     this.answerer = answerer;
+  }
+
+  /** Highlights a target and sits beside it for a few seconds. */
+  pointAt(target: string): void {
+    this.patch({ highlight: target });
+    if (!this.state.chatOpen) this.moveTo(target);
+    this.feel('excited', 1200);
+    this.timer('point', 6000, () => {
+      if (this.state.highlight === target && !this.state.tour) this.patch({ highlight: null });
+      if (this.state.anchor === target) this.moveTo(null);
+    });
   }
 
   /** Effective help style: "lots" (step by step) or "tips" (short, advanced). */
@@ -341,11 +357,14 @@ export class Guide {
     }
     this.patch({ chatOpen: true, busy: true, messages: [...this.state.messages, { from: 'user', text: question }] });
     this.feel('thinking', 20000);
-    let answer: ChatAnswer;
-    try {
-      answer = await this.answerer.answer(question, this.state.lang);
-    } catch {
-      answer = await this.faq.answer(question, this.state.lang);
+    let answer: ChatAnswer | null = this.page ? answerPageQuestion(this, this.page, question) : null;
+    if (!answer) {
+      try {
+        answer = await this.answerer.answer(question, this.state.lang);
+      } catch {
+        answer = await this.faq.answer(question, this.state.lang);
+      }
+      if (!answer.matched && this.page) answer = pageFallback(this.page, question) ?? answer;
     }
     this.memory.update({ questions: this.memory.get('questions') + 1 });
     this.track({ kind: 'question', text: question, answered: answer.matched, lang: this.state.lang, source: answer.source });
@@ -364,6 +383,7 @@ export class Guide {
     if (value === 'chat:open') return this.openChat();
     if (value.startsWith('tour:')) return this.tour.handle(value.slice(5));
     if (value.startsWith('link:')) return this.cue({ type: 'link', href: value.slice(5) });
+    if (value.startsWith('point:')) return this.pointAt(`ref:${value.slice(6)}`);
     if (value.startsWith('faq:')) {
       const answer = this.faq.faqAnswer(value, this.state.lang);
       if (!answer) return;

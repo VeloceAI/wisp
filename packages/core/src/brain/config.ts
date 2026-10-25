@@ -76,6 +76,8 @@ export interface GuideConfig {
   /** Minimum gap between tips the visitor didn't ask for. */
   tipGapMs?: number;
   siteName?: string;
+  /** Areas the guide never reads or touches: CSS selectors, and URL paths such as "/admin*". */
+  blocked?: { selectors?: string[]; paths?: string[] };
   /** Your Wisp proxy (keeps the AI key on your server). Without it, chat uses keyword answers. */
   ai?: { endpoint: string; timeoutMs?: number; maxCalls?: number };
   /**

@@ -42,9 +42,9 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - [x] Voice: browser speechSynthesis/recognition; AI TTS/STT via proxy; recorded clips for fixed lines + clip cache; off by default
 
 ## Step 3 — page understanding
-- [ ] DOM/a11y reader → compact page model (headings, landmarks, buttons, links, forms, text), mutation re-read
-- [ ] Sensitive-field masking, blocked areas, `data-guide-*` labels
-- [ ] Explain page, find + point (scroll, highlight, guide moves beside), answer from page text (AI and non-AI)
+- [x] DOM/a11y reader → compact page model (headings, landmarks, buttons, links, forms, text), mutation re-read
+- [x] Sensitive-field masking, blocked areas, `data-guide-*` labels
+- [x] Explain page, find + point (scroll, highlight, guide moves beside), answer from page text (AI and non-AI)
 
 ## Step 4 — actions
 - [ ] Site-declared actions (tool-style) + generic DOM actions (click, type, select, scroll, navigate, press)
@@ -71,3 +71,9 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - Browser check: chat answered through the demo's mock proxy end to end; voice toggle shows, off by default.
 - Not tested live: real provider calls (no key used, per the brief). Request shapes are unit-tested against each provider's documented format.
 - Split app reactions out of guide.ts (now 448 lines).
+
+### Step 3 (2026-10-25)
+- Shipped: core page model, element finder (role words, sections, fuzzy prefix), no-AI page summary, page-text answers and AI facts, page intents in en/hinglish/hi; web PageReader (roles, accessible names, sections, passages, stable refs, mutation re-read), sensitive-field detection, blocked selectors/paths, `data-wisp-*` labels; chat points at what it finds.
+- Tests: 76 passing; values of password/card fields proven absent from the model.
+- Browser check: "what's on this page?" summary and "password field kahan hai" pointing on the demo.
+- Fixed: summary listed product cards as sections; now uses top-level headings only.

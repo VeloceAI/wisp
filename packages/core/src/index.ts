@@ -18,3 +18,7 @@ export * from './ai/budget';
 export * from './ai/chat-service';
 export * from './ai/ai-answerer';
 export * from './safety/redact';
+export * from './page/model';
+export * from './page/understand';
+export * from './page/intents';
+export type { PageSource } from './brain/page-chat';

@@ -80,6 +80,22 @@ Moods: idle, waking, thinking, talking, happy, excited, celebrate, confused, wor
 
 Built-in lines are in English, Hindi and Hinglish. The visitor's language is picked up from what they type. Add any other language by writing your FAQ, tips and lines with that code (`{ "ta": "…" }`) and button labels under `"ui"`; list them in `"languages"` to show them in settings.
 
+## It understands the page
+
+Wisp reads the page the way a screen reader does (headings, buttons, links, form fields and text), never screenshots, and re-reads when the page changes. Visitors can ask:
+
+- "What's on this page?" / "yeh page kya hai" → a short summary with buttons for each section
+- "Where is the sort menu?" / "cart kahan hai" → it scrolls there, highlights it and hops beside it
+- Any question the page text answers → answered from the page (and given to the AI as facts when AI is on)
+
+It works without any labels. For more accuracy, add `data-wisp-label="Main search"` to name things, `data-wisp-section="pricing"` to group them, and `data-wisp-action="add-to-cart"` to tag buttons.
+
+Privacy: passwords, card numbers, OTP, CVV, PIN and ID fields are recognised and never read. Their values are not part of what Wisp sees, and other text boxes' contents are skipped too. Mark anything else with `data-wisp-sensitive`. Hide areas completely with `data-wisp="off"`, or in config:
+
+```json
+"blocked": { "selectors": [".admin-panel"], "paths": ["/admin*", "/account/billing"] }
+```
+
 ## Bring your own AI key
 
 Wisp works without AI. To let it answer in its own words, run the tiny proxy on your server; the key never reaches visitors' browsers.
@@ -142,7 +158,7 @@ npm run demo        # http://localhost:5180 — demo shop (with a mock-AI proxy 
 
 1. ✅ Core + web: character, moods, guiding, chat without AI, demo
 2. ✅ Your own AI key (OpenAI, Anthropic, Gemini, Groq, OpenRouter, Ollama) through a tiny server you host, plus voice
-3. Page understanding: explain the page, find and point at things
+3. ✅ Page understanding: explain the page, find and point at things
 4. Actions on request, always asking before anything final
 5. Expo / React Native
 6. Adaptive memory and an owner report

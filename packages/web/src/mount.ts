@@ -9,6 +9,7 @@ import {
   type GuideState,
   type KeyValueStore,
   type Mood,
+  type PageModel,
   type TrackEvent,
 } from '@veloceai/wisp-core';
 import { SvgRenderer } from './render/svg';
@@ -21,6 +22,7 @@ import { cssEscape, safeQueryAll, watchSections } from './watch/sections';
 import { browserStore } from './storage';
 import { connectAI, visitorId } from './ai';
 import { WebVoice } from './voice';
+import { PageReader } from './page/reader';
 
 export interface MountOptions {
   /** Where the host element goes. Defaults to document.body. */
@@ -36,6 +38,8 @@ export interface WispInstance {
   guide: Guide;
   emit(name: string, detail?: AppEventDetail): void;
   say(text: string, mood?: Mood): void;
+  /** What the guide currently understands about the page. */
+  read(): PageModel;
   openChat(): void;
   startTour(): void;
   hide(): void;
@@ -52,6 +56,8 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     hostLocale: doc.documentElement.lang || navigator.language,
     answerer: opts.answerer,
   });
+  const reader = new PageReader(doc, { blockedSelectors: config.blocked?.selectors, blockedPaths: config.blocked?.paths });
+  guide.page = reader;
   if (!opts.answerer) connectAI(guide, store);
   const voice =
     config.voice === false
@@ -79,6 +85,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   layer.style.setProperty('--wisp-soft', def.body.glow + '66');
   shadow.append(h('style', {}, STYLES), layer);
   (opts.parent ?? doc.body).append(host);
+  reader.setHost(host);
 
   let size = 96;
   let box: Box = { x: 0, y: 0, w: size, h: size };
@@ -90,6 +97,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
 
   const resolve = (target: string | null): Element | null => {
     if (!target) return null;
+    if (target.startsWith('ref:')) return reader.element(target.slice(4));
     const bySection = doc.querySelector(`[data-wisp-section="${cssEscape(target)}"],[data-wisp-target="${cssEscape(target)}"]`);
     return bySection ?? safeQueryAll(doc, target)[0] ?? null;
   };
@@ -184,7 +192,11 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     renderBubble(s);
     chat.update(s);
     if (s.highlight !== prev.highlight && s.highlight) {
-      resolve(s.highlight)?.scrollIntoView({ block: 'center', behavior: motionQuery?.matches ? 'auto' : 'smooth' });
+      const el = resolve(s.highlight);
+      const r = el?.getBoundingClientRect();
+      if (el && r && (r.top < 0 || r.bottom > win.innerHeight)) {
+        el.scrollIntoView?.({ block: 'center', behavior: motionQuery?.matches ? 'auto' : 'smooth' });
+      }
     }
     queueLayout();
   };
@@ -261,6 +273,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     guide,
     emit: (name, detail) => guide.dispatch({ type: 'app', name, detail }),
     say: (text, mood) => guide.say(text, { mood }),
+    read: () => reader.read(),
     openChat: () => guide.dispatch({ type: 'chat-open' }),
     startTour: () => guide.dispatch({ type: 'button', value: 'tour:start' }),
     hide: () => guide.dispatch({ type: 'hide' }),
@@ -272,6 +285,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
       win.removeEventListener('resize', onResize);
       motionQuery?.removeEventListener?.('change', onMotion);
       guide.destroy();
+      reader.destroy();
       host.remove();
     },
   };
