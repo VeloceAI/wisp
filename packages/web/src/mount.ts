@@ -13,6 +13,7 @@ import {
   type SiteActionHandler,
   type ShopAdapter,
   ShopAssistant,
+  NavHandler,
   ActionRunner,
   localize,
   type TrackEvent,
@@ -74,6 +75,9 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const doc = document;
   const win = window;
   const store = opts.store ?? browserStore();
+  const session = browserStore('sessionStorage');
+  const TALK_KEY = 'wisp:talk-resume';
+  const rememberTalk = () => session.set(TALK_KEY, String(Date.now()));
   const guide = new Guide(config, {
     store,
     // Host dialogs and sheets take priority; tips wait until they close.
@@ -86,7 +90,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   if (!opts.answerer) connectAI(guide, store);
   const driver = new DomDriver(reader, () => config.actions ?? [], (href) => openLink(href));
   const actions = new ActionRunner(guide, driver, {
-    store: browserStore('sessionStorage'),
+    store: session,
     aiPlanner: config.ai?.endpoint ? proxyPlanner(config.ai.endpoint, visitorId(store)) : undefined,
     stepDelayMs: win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 250 : 700,
   });
@@ -121,6 +125,30 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const screenShop = new ScreenShop(doc, () => host, (target) => guide.pointAt(target));
   if (opts.shop) registerShop(opts.shop);
   else if (config.shop) registerShop(screenShop);
+  // Navigation goes first so "go to my cart" opens the cart page instead of reading the cart out.
+  guide.use(
+    new NavHandler(guide, {
+      goTo: (url) => {
+        if (talkLoop?.active) rememberTalk();
+        openLink(url);
+      },
+      click: (ref) => {
+        if (talkLoop?.active) rememberTalk();
+        (reader.element(ref) as HTMLElement | null)?.click();
+      },
+      scrollTo: (ref) => reader.element(ref)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }),
+      scroll: (to) => {
+        const h = win.innerHeight * 0.8;
+        if (to === 'top' || to === 'bottom') win.scrollTo({ top: to === 'top' ? 0 : doc.body.scrollHeight, behavior: 'smooth' });
+        else win.scrollBy({ top: to === 'up' ? -h : h, behavior: 'smooth' });
+      },
+      back: () => {
+        if (talkLoop?.active) rememberTalk();
+        win.history.back();
+      },
+    }, config.pages, config.navWords),
+    { first: true },
+  );
   const layer = h('div', { class: 'layer' }, highlight, figure, bubble, chat.el, tab);
   applyTheme(layer, config, def);
   shadow.append(h('style', {}, STYLES), layer);
@@ -319,6 +347,13 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   raf = requestAnimationFrame(frame);
   guide.dispatch({ type: 'start' });
   void actions.resume();
+  // A spoken "go to …" that loaded a new page carries on listening here.
+  const talkFlag = Number(session.get(TALK_KEY) ?? 0);
+  if (talkLoop && Date.now() - talkFlag < 20000) {
+    session.set(TALK_KEY, '');
+    guide.dispatch({ type: 'chat-open' });
+    void talkLoop.start();
+  }
 
   return {
     guide,

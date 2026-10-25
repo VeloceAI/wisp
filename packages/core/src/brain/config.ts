@@ -4,6 +4,8 @@ import type { Lang, Localized } from './lang';
 import type { UiOverrides } from './lines';
 import type { SiteActionDecl } from '../actions/types';
 import type { ShopConfig } from '../shop/types';
+import type { SitePage } from '../nav/handler';
+import type { NavWordPack } from '../nav/words';
 
 export type HelpLevel = 'auto' | 'lots' | 'tips';
 
@@ -96,6 +98,10 @@ export interface GuideConfig {
   voice?: false | { mode?: 'browser' | 'ai'; clips?: Record<string, string>; talk?: boolean };
   /** Voice and chat shopping settings; the store itself is passed with `registerShop`. */
   shop?: ShopConfig;
+  /** Pages people can ask for by name ("go to my orders"), even when they aren't linked on screen. */
+  pages?: SitePage[];
+  /** Extra "go to" / "back" phrases for more languages. */
+  navWords?: Partial<NavWordPack>[];
 }
 
 export type GuideSize = 'small' | 'medium' | 'large' | number;

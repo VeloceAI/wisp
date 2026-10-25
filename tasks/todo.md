@@ -97,3 +97,10 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - Screen mode: ScreenShop adapter uses the store's own search box, reads product cards (name, unit, price, stock, Add/+/−), taps them, reads the page's cart total, opens the cart instead of ordering. Enabled by `"shop": {}` with no registerShop.
 - Word packs and reply lines for ta, te, bn, mr, gu, kn, ml, pa (first drafts; need native review). Pack field `and` for list joiners; done-words now checked after total/cart/checkout ("kitna ho gaya").
 - Tests: 130 passing. Real Chrome: Tamil, Hindi and Hinglish screen-mode conversation on /grocery.html?mode=screen.
+
+## Next (2026-10-26, agreed with the user)
+- [x] Voice navigation: "go to X", "open cart", "peeche jao", scroll; `pages` site map in config; talk mode continues after a page change; 11 languages; no AI
+- [ ] Character builder page with live 12-mood preview and copyable config
+- [ ] Logo mode: logo becomes the body (face drawn on top), palette taken from the logo
+- [ ] "Describe it" designer via the proxy (AI), mock in the demo
+- [ ] Livelier demo video: hook, faster scenes, brighter voice (af_bella, slight speed-up), music bed (needs a royalty-free track; ask before downloading), title and end cards, new scenes for navigation and the builder

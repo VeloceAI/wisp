@@ -5,6 +5,11 @@ export const demoConfig: GuideConfig = {
   siteName: 'Petal & Thread',
   ai: { endpoint: '/wisp' },
   voice: { mode: 'browser' },
+  pages: [
+    { name: ['Voice shopping', 'grocery', 'QuickBasket', { hi: 'किराना', hinglish: 'grocery wala page' }], url: '/grocery.html', keywords: ['sabzi', 'vegetables'] },
+    { name: ['All moods', 'moods', 'characters'], url: '/moods.html' },
+    { name: ['One line demo', 'script tag'], url: '/script-tag.html' },
+  ],
   character: 'wisp',
   idle: { sleepyAfterMs: 30000, sleepAfterMs: 50000 },
   tour: [

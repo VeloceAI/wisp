@@ -123,6 +123,10 @@ const wisp = mount(
     character: 'sprout',
     welcome: true,
     voice: { mode: 'browser', talk: true },
+    pages: [
+      { name: ['Fashion shop', 'dresses', 'Petal and Thread', { hinglish: 'kapde wala page' }], url: '/' },
+      { name: ['All moods', 'moods'], url: '/moods.html' },
+    ],
     shop: {
       currency: '₹',
       synonyms: {

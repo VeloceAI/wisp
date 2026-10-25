@@ -242,6 +242,18 @@ With AI on, a word nobody listed is translated once, only when a search finds no
 
 The eight extra languages are first drafts and need a quick check by a native speaker before going live. Adding a language means filling in one small word file (words for show, add, remove, first, numbers, units), about 15 minutes, no code. Listening uses the browser's free speech recognition, which covers 60+ languages. With the AI proxy and `"voice": { "mode": "ai" }`, natural voices are used and the language is detected automatically. Try it at `/grocery.html`, or `/grocery.html?mode=screen` for screen mode.
 
+## Get around by voice
+
+"Go to delivery", "open my cart", "orders page kholo", "peeche jao", "scroll down", "sabse upar", "கார்ட்டுக்கு போ". Wisp finds the link, tab or section on screen and goes there, telling you where it's going. For pages that aren't linked on the current screen, list them once:
+
+```json
+"pages": [
+  { "name": ["My orders", { "hi": "मेरे ऑर्डर", "hinglish": "order wala page" }], "url": "/orders", "keywords": ["order history"] }
+]
+```
+
+In talk mode it keeps listening after the page changes, so people can move around and shop by voice alone. Works in all 11 languages, without AI.
+
 ## Bring your own AI key
 
 Wisp works without AI. To let it answer in its own words, run the tiny proxy on your server; the key never reaches visitors' browsers.
