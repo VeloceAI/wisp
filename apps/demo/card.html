@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Wisp</title>
+    <style>
+      html, body { margin: 0; height: 100%; }
+      body { display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, #efeaff, #d9d0ff 45%, #b9a8ff); font-family: "Segoe UI", system-ui, sans-serif; color: #1d1442; overflow: hidden; }
+      .wrap { text-align: center; }
+      #char svg { width: 300px; height: 300px; overflow: visible; }
+      h1 { font-size: 64px; line-height: 1.05; margin: 8px 0 10px; letter-spacing: -1.5px; opacity: 0; transform: translateY(16px); animation: in .6s .25s forwards cubic-bezier(.2,.9,.3,1.2); }
+      p { font-size: 26px; margin: 0; color: #4b3f8a; opacity: 0; animation: in .6s .6s forwards; }
+      code { display: inline-block; margin-top: 18px; background: #1d1442; color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 20px; opacity: 0; animation: in .6s .9s forwards; }
+      code[hidden] { display: none; }
+      @keyframes in { to { opacity: 1; transform: none; } }
+    </style>
+  </head>
+  <body data-wisp="off">
+    <div class="wrap"><div id="char"></div><h1 id="t"></h1><p id="s"></p><code id="c" hidden></code></div>
+    <script type="module" src="/src/card.ts"></script>
+  </body>
+</html>

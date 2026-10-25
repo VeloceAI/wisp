@@ -6,7 +6,7 @@
 It welcomes visitors, shows them around, answers in their language, reads the page, and helps them get things done.</p>
 
 <p align="center">
-  <a href="docs/wisp-demo.mp4">▶ Watch the 75-second video (with voiceover)</a> ·
+  <a href="docs/wisp-demo.mp4">▶ Watch the 70-second video (with voiceover)</a> ·
   <a href="docs/Wisp-Guide.pdf">📘 Read the PDF guide</a> ·
   <a href="#run-the-demo">🛍 Try the demo shop</a>
 </p>
@@ -326,6 +326,7 @@ npm test            # 100 tests: core, web (jsdom), proxy
 npm run typecheck
 npm run docs:art    # redraws the character images and the animated GIF from the real drawing code
 npm run docs:video  # records the narrated docs/wisp-demo.mp4 and screenshots (needs Chrome and ffmpeg; free Kokoro voice)
+WISP_MUSIC=track.mp3 npm run docs:remux   # adds background music to the last recording, ducked under the voice
 npm run docs:pdf    # prints docs/guide/guide.html to docs/Wisp-Guide.pdf
 ```
 

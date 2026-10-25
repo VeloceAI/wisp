@@ -14,7 +14,8 @@
     "demo": "npm run dev -w wisp-demo",
     "docs:art": "tsx scripts/docs/render-characters.ts",
     "docs:video": "tsx scripts/docs/record-demo.ts",
-    "docs:pdf": "tsx scripts/docs/build-pdf.ts"
+    "docs:pdf": "tsx scripts/docs/build-pdf.ts",
+    "docs:remux": "tsx scripts/docs/remux.ts"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",

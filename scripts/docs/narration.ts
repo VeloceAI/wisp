@@ -1,5 +1,5 @@
 // Voiceover for the demo video. Free and natural by default: Kokoro, an open-source voice that runs locally
-// (WISP_KOKORO_VOICE, default af_heart; first run downloads a ~90 MB model). WISP_TTS_PROVIDER=openai with
+// (WISP_KOKORO_VOICE, default af_bella, a brighter voice; WISP_VOICE_SPEED, default 1.08; first run downloads a ~90 MB model). WISP_TTS_PROVIDER=openai with
 // WISP_API_KEY uses a paid AI voice instead; without Kokoro, Windows' built-in voice is the fallback.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -50,7 +50,8 @@ export async function makeClips(lines: string[], dir: string): Promise<Clip[]> {
   const ai = process.env.WISP_TTS_PROVIDER;
   const provider = ai ? createProvider({ provider: ai as ProviderName, apiKey: process.env.WISP_API_KEY, ttsVoice: process.env.WISP_TTS_VOICE ?? 'nova' }) : null;
   const kokoro = provider ? null : await loadKokoro();
-  const voice = process.env.WISP_KOKORO_VOICE ?? 'af_heart';
+  const voice = process.env.WISP_KOKORO_VOICE ?? 'af_bella';
+  const speed = Number(process.env.WISP_VOICE_SPEED ?? 1.08);
   const clips: Clip[] = [];
   for (const [i, text] of lines.entries()) {
     if (!text) {
@@ -64,7 +65,7 @@ export async function makeClips(lines: string[], dir: string): Promise<Clip[]> {
     } else if (kokoro) {
       file = join(dir, `line${i}.wav`);
       // save() writes in the background in some versions; wait for it before measuring the clip.
-      await (await kokoro.generate(text, { voice })).save(file);
+      await (await kokoro.generate(text, { voice, speed })).save(file);
     } else if (process.platform === 'win32') {
       file = join(dir, `line${i}.wav`);
       windowsVoice(text, file);
@@ -77,8 +78,11 @@ export async function makeClips(lines: string[], dir: string): Promise<Clip[]> {
   return clips;
 }
 
-/** Converts the screen recording to mp4 and lays each voice clip at the moment its scene began. */
-export function muxVideo(rawVideo: string, clips: Clip[], startsMs: number[], out: string): void {
+/**
+ * Converts the screen recording to mp4 and lays each voice clip at the moment its scene began.
+ * With `music`, a royalty-free track plays underneath and dips while the voice speaks.
+ */
+export function muxVideo(rawVideo: string, clips: Clip[], startsMs: number[], out: string, music?: string): void {
   const voiced = clips.map((c, i) => ({ ...c, at: startsMs[i] ?? 0 })).filter((c) => c.file);
   const args = ['-y', '-loglevel', 'error', '-i', rawVideo];
   for (const c of voiced) args.push('-i', c.file);
@@ -88,6 +92,13 @@ export function muxVideo(rawVideo: string, clips: Clip[], startsMs: number[], ou
     return;
   }
   const delays = voiced.map((c, i) => `[${i + 1}:a]aresample=44100,adelay=${c.at}|${c.at}[a${i}]`).join(';');
-  const mix = `${voiced.map((_, i) => `[a${i}]`).join('')}amix=inputs=${voiced.length}:normalize=0,volume=1.6[voice]`;
-  execFileSync(FFMPEG, [...args, '-filter_complex', `${delays};${mix}`, '-map', '0:v', '-map', '[voice]', ...video, '-c:a', 'aac', '-b:a', '128k', out]);
+  const mix = `${voiced.map((_, i) => `[a${i}]`).join('')}amix=inputs=${voiced.length}:normalize=0,volume=1.3`;
+  if (!music) {
+    execFileSync(FFMPEG, [...args, '-filter_complex', `${delays};${mix}[voice]`, '-map', '0:v', '-map', '[voice]', ...video, '-c:a', 'aac', '-b:a', '128k', out]);
+    return;
+  }
+  const m = voiced.length + 1;
+  const bed = `[${m}:a]aresample=44100,volume=0.22,afade=t=in:d=1.5[bed0];[bed0][vk]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[bed]`;
+  const final = `${mix},asplit=2[voice][vk];${bed};[voice][bed]amix=inputs=2:normalize=0:duration=longest[out]`;
+  execFileSync(FFMPEG, [...args, '-stream_loop', '-1', '-i', music, '-filter_complex', `${delays};${final}`, '-map', '0:v', '-map', '[out]', ...video, '-c:a', 'aac', '-b:a', '160k', '-shortest', out]);
 }
