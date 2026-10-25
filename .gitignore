@@ -7,3 +7,5 @@ coverage/
 !.env.example
 .wisp-cache/
 .DS_Store
+docs/.voice/
+docs/.raw-demo.webm

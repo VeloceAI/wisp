@@ -1,7 +1,8 @@
-// Records the demo shop walkthrough and key screenshots: npm run demo (in one terminal), then npm run docs:video
+// Records the narrated demo video and the README screenshots: npm run demo (in one terminal), then npm run docs:video
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import puppeteer, { type Page } from 'puppeteer-core';
+import { makeClips, muxVideo } from './narration';
 
 const URL = process.env.DEMO_URL ?? 'http://localhost:5180/';
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -38,21 +39,138 @@ async function ask(page: Page, text: string) {
   await wait(400);
   for (let i = 1; i <= text.length; i += 2) {
     await page.evaluate((t) => {
-      const input = document.querySelector('[data-wisp-host]')!.shadowRoot!.querySelector('.chat input') as HTMLInputElement;
-      input.value = t;
+      (document.querySelector('[data-wisp-host]')!.shadowRoot!.querySelector('.chat input') as HTMLInputElement).value = t;
     }, text.slice(0, i));
     await wait(35);
   }
-  await page.evaluate(() => {
+  await page.evaluate((t) => {
     const form = document.querySelector('[data-wisp-host]')!.shadowRoot!.querySelector('.chat form') as HTMLFormElement;
-    (form.querySelector('input') as HTMLInputElement).value = (form.querySelector('input') as HTMLInputElement).value;
+    (form.querySelector('input') as HTMLInputElement).value = t;
     form.requestSubmit();
-  });
+  }, text);
 }
 
 const shot = (page: Page, name: string) => page.screenshot({ path: `${SHOTS}/${name}.png` as `${string}.png` });
 
+interface Scene {
+  caption: string;
+  /** What the voiceover says; spelled for the speech engine. */
+  say: string;
+  run(page: Page): Promise<void>;
+  /** Shortest time on screen, even if the voice line is shorter. */
+  minMs: number;
+}
+
+const SCENES: Scene[] = [
+  { caption: 'Meet Wisp: a living guide for any website', say: 'Meet Wisp. A small, friendly guide that lives on your website or app.', minMs: 3200, run: async (p) => { await wait(2800); await shot(p, 'welcome'); } },
+  {
+    caption: 'It runs a tour for new visitors',
+    say: 'New visitors get a quick tour, step by step.',
+    minMs: 5000,
+    run: async (p) => {
+      await wisp(p, `w.guide.dispatch({ type: 'button', value: 'tour:start' });`);
+      await wait(2400);
+      await shot(p, 'tour');
+      await wisp(p, `w.guide.dispatch({ type: 'button', value: 'tour:next' });`);
+      await wait(2200);
+      await wisp(p, `w.guide.dispatch({ type: 'button', value: 'tour:end' });`);
+    },
+  },
+  {
+    caption: 'It gives a short tip beside what you are reading',
+    say: 'As people scroll, it gives one short tip, right beside what they are reading.',
+    minMs: 4500,
+    run: async (p) => {
+      await p.evaluate(() => window.scrollTo({ top: document.getElementById('shop')!.offsetTop - 60, behavior: 'smooth' }));
+      await wait(4300);
+      await shot(p, 'tip');
+    },
+  },
+  {
+    caption: 'Ask anything, in English, Hindi or Hinglish',
+    say: 'Visitors can ask anything, in English, Hindi, or Hinglish. It answers from your own help pages.',
+    minMs: 4000,
+    run: async (p) => {
+      await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      await ask(p, 'delivery kitne din mein hogi?');
+      await wait(2400);
+      await shot(p, 'chat-hinglish');
+    },
+  },
+  { caption: 'It reads the page and explains it', say: 'It reads the page, so it can explain what is here.', minMs: 3600, run: async (p) => { await ask(p, "what's on this page?"); await wait(3000); await shot(p, 'explain'); } },
+  {
+    caption: 'It finds things and points at them',
+    say: 'And it can find things, and point right at them.',
+    minMs: 3600,
+    run: async (p) => {
+      await ask(p, 'where is the sort menu?');
+      await wait(2400);
+      await wisp(p, `w.guide.dispatch({ type: 'chat-close' });`);
+      await wait(900);
+      await shot(p, 'point');
+    },
+  },
+  {
+    caption: 'It does things for you, step by step, with a Stop button',
+    say: 'Ask it to do something, and it does it step by step, with a stop button. It always asks before anything final, like paying.',
+    minMs: 6500,
+    run: async (p) => {
+      await wisp(p, `w.run('search red dress under ₹2000 and sort by price');`);
+      await wait(2200);
+      await shot(p, 'action');
+    },
+  },
+  {
+    caption: 'It reacts to your app: plain-English fixes for errors',
+    say: 'When something goes wrong, it explains the fix in plain words.',
+    minMs: 3600,
+    run: async (p) => {
+      await p.evaluate(() => window.dispatchEvent(new CustomEvent('wisp:error', { detail: { code: 'card_declined' } })));
+      await wait(3000);
+      await shot(p, 'error');
+      await wisp(p, `w.guide.dispatch({ type: 'dismiss' });`);
+    },
+  },
+  {
+    caption: '…and celebrates when things go right',
+    say: 'And it celebrates when things go right.',
+    minMs: 2800,
+    run: async (p) => {
+      await p.evaluate(() => window.dispatchEvent(new CustomEvent('wisp:success', { detail: { line: 'Order placed! It reaches you in 3 to 5 days.' } })));
+    },
+  },
+  {
+    caption: 'Shop by voice, in many Indian languages',
+    say: 'It can even shop by voice, in many Indian languages. Say, pyaaz dikhaao, and it searches the store for onion, reads the results, and adds the first one to your cart.',
+    minMs: 9000,
+    run: async (p) => {
+      await p.goto(new globalThis.URL('/grocery.html?mode=screen', URL).href, { waitUntil: 'load' });
+      await caption(p, 'Shop by voice, in many Indian languages');
+      await wait(1200);
+      await ask(p, 'pyaaz dikhao');
+      await wait(2600);
+      await ask(p, 'pehla wala daal do');
+      await wait(2000);
+      await shot(p, 'grocery-screen-mode');
+    },
+  },
+  {
+    caption: '12 moods, any look, with or without AI',
+    say: 'Twelve moods, any look you like, and it works with or without A I.',
+    minMs: 4000,
+    run: async (p) => {
+      await p.goto(new globalThis.URL('/moods.html', URL).href, { waitUntil: 'load' });
+      await caption(p, '12 moods, any look, with or without AI');
+      await wait(1200);
+      await shot(p, 'moods');
+      await p.evaluate(() => window.scrollBy({ top: 700, behavior: 'smooth' }));
+    },
+  },
+  { caption: 'Add it in one line · github.com/VeloceAI/wisp', say: 'Add it to your product with one line of code. Wisp, by Veloce A I.', minMs: 3600, run: async () => {} },
+];
+
 async function main() {
+  const clips = await makeClips(SCENES.map((s) => s.say), 'docs/.voice');
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, defaultViewport: { width: 1280, height: 760 }, args: ['--hide-scrollbars'] });
   const page = await browser.newPage();
   await page.goto(URL, { waitUntil: 'networkidle0' });
@@ -60,69 +178,18 @@ async function main() {
   await page.reload({ waitUntil: 'networkidle0' });
 
   const recorder = await page.screencast({ path: 'docs/.raw-demo.webm' });
-  await caption(page, 'Meet Wisp: a living guide for any website');
-  await wait(3200);
-  await shot(page, 'welcome');
-
-  await caption(page, 'It runs a tour for new visitors');
-  await wisp(page, `w.guide.dispatch({ type: 'button', value: 'tour:start' });`);
-  await wait(2600);
-  await shot(page, 'tour');
-  await wisp(page, `w.guide.dispatch({ type: 'button', value: 'tour:next' });`);
-  await wait(2400);
-  await wisp(page, `w.guide.dispatch({ type: 'button', value: 'tour:end' });`);
-  await wait(1800);
-
-  await caption(page, 'It gives a short tip beside what you are reading');
-  await page.evaluate(() => window.scrollTo({ top: document.getElementById('shop')!.offsetTop - 60, behavior: 'smooth' }));
-  await wait(4500);
-  await shot(page, 'tip');
-
-  await caption(page, 'Ask anything, in English, Hindi or Hinglish');
-  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  await ask(page, 'delivery kitne din mein hogi?');
-  await wait(2600);
-  await shot(page, 'chat-hinglish');
-
-  await caption(page, 'It reads the page and explains it');
-  await ask(page, "what's on this page?");
-  await wait(3200);
-  await shot(page, 'explain');
-
-  await caption(page, 'It finds things and points at them');
-  await ask(page, 'where is the sort menu?');
-  await wait(2600);
-  await wisp(page, `w.guide.dispatch({ type: 'chat-close' });`);
-  await wait(1200);
-  await shot(page, 'point');
-
-  await caption(page, 'It does things for you, step by step, with a Stop button');
-  await wisp(page, `w.run('search red dress under ₹2000 and sort by price');`);
-  await wait(2300);
-  await shot(page, 'action');
-  await wait(4200);
-
-  await caption(page, 'It reacts to your app: plain-English fixes for errors');
-  await page.evaluate(() => window.dispatchEvent(new CustomEvent('wisp:error', { detail: { code: 'card_declined' } })));
-  await wait(3200);
-  await shot(page, 'error');
-  await wisp(page, `w.guide.dispatch({ type: 'dismiss' });`);
-  await caption(page, '...and celebrates when things go right');
-  await page.evaluate(() => window.dispatchEvent(new CustomEvent('wisp:success', { detail: { line: 'Order placed! It reaches you in 3 to 5 days.' } })));
-  await wait(3000);
-
-  await caption(page, '12 moods, any look, one line to add');
-  await page.goto(new globalThis.URL('/moods.html', URL).href, { waitUntil: 'load' });
-  await caption(page, '12 moods, any look, one line to add');
-  await wait(1500);
-  await shot(page, 'moods');
-  await page.evaluate(() => window.scrollBy({ top: 700, behavior: 'smooth' }));
-  await wait(2500);
-  await caption(page, 'github.com/VeloceAI/wisp');
-  await wait(2200);
+  const t0 = Date.now();
+  const starts: number[] = [];
+  for (const [i, scene] of SCENES.entries()) {
+    const start = Date.now();
+    starts.push(start - t0);
+    await caption(page, scene.caption);
+    await scene.run(page);
+    const left = Math.max(scene.minMs, (clips[i]?.ms ?? 0) + 500) - (Date.now() - start);
+    if (left > 0) await wait(left);
+  }
   await recorder.stop();
 
-  // Phone view.
   const phone = await browser.newPage();
   await phone.emulate({ viewport: { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }, userAgent: 'Mozilla/5.0 (Linux; Android 14) Mobile' });
   await phone.goto(URL, { waitUntil: 'load' });
@@ -132,10 +199,11 @@ async function main() {
   await phone.screenshot({ path: `${SHOTS}/phone.png` });
   await browser.close();
 
-  execFileSync(FFMPEG, ['-y', '-loglevel', 'error', '-i', 'docs/.raw-demo.webm', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '28', '-preset', 'slow', '-movflags', '+faststart', '-vf', 'scale=1280:-2', 'docs/wisp-demo.mp4']);
+  muxVideo('docs/.raw-demo.webm', clips, starts, 'docs/wisp-demo.mp4');
   execFileSync(FFMPEG, ['-y', '-loglevel', 'error', '-i', 'docs/wisp-demo.mp4', '-vf', 'fps=10,scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer', 'docs/assets/demo.gif']);
   rmSync('docs/.raw-demo.webm', { force: true });
-  console.log('video and screenshots written');
+  rmSync('docs/.voice', { recursive: true, force: true });
+  console.log(`video written (${clips.filter((c) => c.file).length} voice lines)`);
 }
 
 main().catch((err) => {
