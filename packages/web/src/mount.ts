@@ -31,7 +31,8 @@ import { WebVoice } from './voice';
 import { TalkLoop } from './talk';
 import { PageReader } from './page/reader';
 import { DomDriver } from './actions/driver';
-import { proxyPlanner } from './ai';
+import { proxyPlanner, proxyTranslator } from './ai';
+import { ScreenShop } from './shop/screen-shop';
 
 export interface MountOptions {
   /** Where the host element goes. Defaults to document.body. */
@@ -114,8 +115,12 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const tab = h('button', { type: 'button', class: `tab ${corner === 'bottom-left' ? 'left' : 'right'}`, hidden: true, onclick: () => guide.dispatch({ type: 'show' }) });
   const talkLoop = voice && config.voice !== false && config.voice?.talk !== false ? new TalkLoop(guide, voice, config.shop?.words) : null;
   const chat = new ChatView(guide, (v) => guide.dispatch({ type: 'button', value: v }), voice, talkLoop);
-  const registerShop = (shop: ShopAdapter) => guide.use(new ShopAssistant(guide, shop, config.shop), { first: true });
+  const translator = config.ai?.endpoint ? proxyTranslator(config.ai.endpoint, visitorId(store)) : undefined;
+  const registerShop = (shop: ShopAdapter) => guide.use(new ShopAssistant(guide, shop, config.shop, translator), { first: true });
+  // With shop settings but no store connection, Wisp shops through the page itself.
+  const screenShop = new ScreenShop(doc, () => host, (target) => guide.pointAt(target));
   if (opts.shop) registerShop(opts.shop);
+  else if (config.shop) registerShop(screenShop);
   const layer = h('div', { class: 'layer' }, highlight, figure, bubble, chat.el, tab);
   applyTheme(layer, config, def);
   shadow.append(h('style', {}, STYLES), layer);
@@ -133,6 +138,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const resolve = (target: string | null): Element | null => {
     if (!target) return null;
     if (target.startsWith('ref:')) return reader.element(target.slice(4));
+    if (target.startsWith('card:')) return screenShop.element(target.slice(5));
     const bySection = doc.querySelector(`[data-wisp-section="${cssEscape(target)}"],[data-wisp-target="${cssEscape(target)}"]`);
     if (bySection) return bySection;
     const all = safeQueryAll(doc, target);

@@ -4,7 +4,8 @@ import type { Mood } from '../character/moods';
 import type { CommandHandler } from '../brain/types';
 import { terms } from '../chat/text';
 import { parseShop, type ShopIntent } from './parse';
-import type { Cart, Product, ShopAdapter, ShopConfig } from './types';
+import { looksUntranslated, toCatalogQuery } from './catalog-words';
+import type { Cart, Product, ShopAdapter, ShopConfig, Translator } from './types';
 import { BUILT_IN_WORD_PACKS, mergePacks } from './words';
 
 type Reply = { text: string; buttons?: Button[]; mood?: Mood };
@@ -22,10 +23,13 @@ export class ShopAssistant implements CommandHandler {
   /** While a list is being added, items collect here for one combined reply. */
   private batch: string[] | null = null;
 
+  private translated = new Map<string, string | null>();
+
   constructor(
     private g: Guide,
     private shop: ShopAdapter,
     private config: ShopConfig = {},
+    private translate?: Translator,
   ) {
     this.words = mergePacks([...BUILT_IN_WORD_PACKS, ...(config.words ?? [])]);
   }
@@ -119,13 +123,18 @@ export class ShopAssistant implements CommandHandler {
     }
   }
 
+  /** Searches in the catalogue's language; asks the translator only when a search finds nothing. */
   private async search(query: string, maxPrice?: number): Promise<Product[]> {
     const syn = this.config.synonyms ?? {};
-    const q = query
-      .split(/\s+/)
-      .map((w) => syn[w] ?? syn[w.toLowerCase()] ?? w)
-      .join(' ');
-    const found = await this.shop.search(q, maxPrice !== undefined ? { maxPrice } : undefined);
+    const english = (this.config.searchLanguage ?? 'en') === 'en';
+    const q = english ? toCatalogQuery(query, syn) : query.split(/\s+/).map((w) => syn[w] ?? w).join(' ');
+    const opts = maxPrice !== undefined ? { maxPrice } : undefined;
+    let found = await this.shop.search(q, opts);
+    if (!found.length && this.translate && (looksUntranslated(q) || q === query)) {
+      if (!this.translated.has(query)) this.translated.set(query, await this.translate(query).catch(() => null));
+      const t = this.translated.get(query);
+      if (t && t.toLowerCase() !== q.toLowerCase()) found = await this.shop.search(t, opts);
+    }
     return maxPrice !== undefined ? found.filter((p) => p.price === undefined || p.price <= maxPrice) : found;
   }
 
@@ -201,6 +210,10 @@ export class ShopAssistant implements CommandHandler {
   private async checkout(): Promise<Reply> {
     const cart = await this.shop.cart();
     if (!cart.lines.length) return { text: this.g.line('shop.cartEmpty') };
+    if (!this.shop.checkout && this.shop.openCart) {
+      await this.shop.openCart();
+      return { text: this.g.line('shop.cartOpened') };
+    }
     if (!this.shop.checkout) return { text: this.g.line('shop.failed') };
     this.pending = { kind: 'checkout' };
     return {

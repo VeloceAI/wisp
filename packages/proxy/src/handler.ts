@@ -1,6 +1,7 @@
 import {
   CallLimiter,
   planWithAI,
+  translateForSearch,
   FaqChat,
   Lines,
   answerWithAI,
@@ -78,6 +79,7 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
     try {
       if (route === 'chat') return json(await chat(await readJson(req), visitor, spend), 200, headers);
       if (route === 'plan') return json(await plan(await readJson(req), spend), 200, headers);
+      if (route === 'translate') return json(await translate(await readJson(req), spend), 200, headers);
       if (route === 'tts' && opts.voice?.enabled && provider.speak) return await tts(await readJson(req), headers, spend);
       if (route === 'stt' && opts.voice?.enabled && provider.transcribe) return await stt(req, headers, spend);
       return json({ error: 'not found' }, 404, headers);
@@ -103,6 +105,21 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
     );
     opts.onTrack?.({ kind: 'ai-question', visitor, question: redact(question), found: reply.found, lang });
     return reply;
+  }
+
+  // Product names repeat a lot ("pyaaz", "kothimbir"), so each is translated once per server.
+  const translations = new Map<string, string | null>();
+  async function translate(body: Record<string, unknown>, spend: () => void) {
+    const text = str(body.text, 80).toLowerCase();
+    const target = str(body.target, 30) || 'English';
+    if (!text) throw new BadRequest('text required');
+    const key = `${target}|${text}`;
+    if (!translations.has(key)) {
+      spend();
+      translations.set(key, await translateForSearch(provider, text, target, opts.timeoutMs ?? 6000));
+      if (translations.size > 5000) translations.delete(translations.keys().next().value!);
+    }
+    return { item: translations.get(key) ?? null };
   }
 
   async function plan(body: Record<string, unknown>, spend: () => void) {

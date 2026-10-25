@@ -1,4 +1,5 @@
 import type { ShopWordPack } from './types';
+import { INDIC_WORD_PACKS } from './words-indic';
 
 const units = (map: Record<string, string[]>) => Object.fromEntries(Object.entries(map).flatMap(([u, words]) => words.map((w) => [w, u])));
 
@@ -22,6 +23,7 @@ export const EN_WORDS: ShopWordPack = {
   numbers: { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, half: 0.5, dozen: 12, couple: 2 },
   units: units({ kg: ['kg', 'kgs', 'kilo', 'kilos', 'kilogram', 'kilograms'], g: ['g', 'gm', 'gms', 'gram', 'grams'], l: ['l', 'litre', 'litres', 'liter', 'liters', 'ltr'], ml: ['ml'], pack: ['pack', 'packs', 'packet', 'packets', 'box', 'boxes', 'bottle', 'bottles'], pc: ['piece', 'pieces', 'pc', 'pcs'], dozen: ['dozen'] }),
   under: ['under', 'below', 'less than', 'within', 'up to', 'upto', 'cheaper than', 'max'],
+  and: ['and then', 'then', 'and', '&'],
 };
 
 export const HINGLISH_WORDS: ShopWordPack = {
@@ -44,6 +46,7 @@ export const HINGLISH_WORDS: ShopWordPack = {
   numbers: { ek: 1, do: 2, teen: 3, char: 4, chaar: 4, paanch: 5, panch: 5, chhe: 6, che: 6, saat: 7, aath: 8, nau: 9, das: 10, aadha: 0.5, adha: 0.5, dhai: 2.5, dedh: 1.5 },
   units: units({ kg: ['kilo', 'kg', 'kila'], g: ['gram', 'gm'], l: ['litre', 'liter', 'leetar'], pack: ['packet', 'pack', 'paket', 'dabba', 'bottle'], pc: ['piece', 'nag'], dozen: ['darjan', 'dozen'] }),
   under: ['ke andar', 'se kam', 'tak', 'ke neeche', 'ke niche', 'ke under'],
+  and: ['aur', 'phir', 'fir'],
 };
 
 export const HI_WORDS: ShopWordPack = {
@@ -66,17 +69,20 @@ export const HI_WORDS: ShopWordPack = {
   numbers: { एक: 1, दो: 2, तीन: 3, चार: 4, पांच: 5, पाँच: 5, छह: 6, सात: 7, आठ: 8, नौ: 9, दस: 10, आधा: 0.5, डेढ़: 1.5, ढाई: 2.5, दर्जन: 12 },
   units: units({ kg: ['किलो', 'केजी'], g: ['ग्राम'], l: ['लीटर'], pack: ['पैकेट', 'डिब्बा', 'बोतल'], pc: ['पीस', 'नग'], dozen: ['दर्जन'] }),
   under: ['के अंदर', 'से कम', 'तक', 'के नीचे'],
+  and: ['और', 'फिर'],
 };
 
-export const BUILT_IN_WORD_PACKS = [EN_WORDS, HINGLISH_WORDS, HI_WORDS];
+/** English, Hinglish and Hindi, plus first drafts for Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam and Punjabi. */
+export const BUILT_IN_WORD_PACKS: Partial<ShopWordPack>[] = [EN_WORDS, HINGLISH_WORDS, HI_WORDS, ...INDIC_WORD_PACKS];
 
 /** All packs merged into one, so mixed speech ("do kilo onion daal do") still works. */
 export function mergePacks(packs: Partial<ShopWordPack>[]): ShopWordPack {
   const out: ShopWordPack = { ...EN_WORDS, lang: 'any', ordinals: {}, numbers: {}, units: {} };
-  const listKeys = ['find', 'add', 'remove', 'cart', 'total', 'checkout', 'more', 'setTo', 'done', 'yes', 'no', 'cheapest', 'costliest', 'fillers', 'under'] as const;
+  const listKeys = ['find', 'add', 'remove', 'cart', 'total', 'checkout', 'more', 'setTo', 'done', 'yes', 'no', 'cheapest', 'costliest', 'fillers', 'under', 'and'] as const;
   for (const k of listKeys) out[k] = [];
+  out.and = [];
   for (const p of packs) {
-    for (const k of listKeys) out[k].push(...(p[k] ?? []).map((w) => w.toLowerCase()));
+    for (const k of listKeys) out[k]!.push(...(p[k] ?? []).map((w) => w.toLowerCase()));
     Object.assign(out.ordinals, p.ordinals);
     Object.assign(out.numbers, p.numbers);
     Object.assign(out.units, p.units);

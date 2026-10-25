@@ -205,7 +205,13 @@ It understands:
 - **Cart:** "remove tomato", "what's in my cart", "total kitna hua".
 - **Checkout:** "order kar do" reads back the total. **It never orders on voice alone**: the visitor taps "Confirm order".
 
-Give Wisp your store's search, cart and checkout:
+**Two ways to connect a store:**
+
+1. **Screen mode, no code.** Add `"shop": {}` to the config. Wisp uses the store's own search box, reads the product cards on the page (name, size, price, Add button), and taps Add or + like a person would. "Order kar do" only opens the cart; the visitor places the order. Works on any shop page; mark cards with `data-wisp-product` if the automatic detection misses them.
+
+   <p align="center"><img src="docs/assets/screens/grocery-screen-mode.png" width="640" alt="Screen mode in Tamil on the demo store" /></p>
+
+2. **Connected mode, most accurate.** Give Wisp your store's search, cart and checkout:
 
 ```js
 Wisp.instance.registerShop({
@@ -218,11 +224,23 @@ Wisp.instance.registerShop({
 });
 ```
 
+**Searching in the store's language.** People say "pyaaz", "प्याज़" or "வெங்காயம்"; the store's search gets "onion". A built-in list of about 150 everyday grocery and household words does this with no AI, and stores add their own:
+
 ```json
-"shop": { "currency": "₹", "synonyms": { "pyaaz": "onion", "kanda": "onion", "doodh": "milk" } }
+"shop": { "currency": "₹", "synonyms": { "kanda": "onion", "doodh": "milk" }, "searchLanguage": "en" }
 ```
 
-**Any language.** English, Hindi and Hinglish come built in. For any other language, add a word pack under `"shop": { "words": [...] }`; [docs/voice-word-pack-template.json](docs/voice-word-pack-template.json) shows Tamil. Listening uses the browser's own speech recognition (60+ languages, including all major Indian ones) for free. With the AI proxy and `"voice": { "mode": "ai" }`, natural AI voices are used and the language is detected automatically. Try it at `/grocery.html` in the demo.
+With AI on, a word nobody listed is translated once, only when a search finds nothing, then cached on your server.
+
+**Languages.**
+
+| Language | Understands requests | Replies |
+|---|---|---|
+| English, Hindi, Hinglish | ✅ | ✅ |
+| Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi | ✅ first drafts | ✅ first drafts |
+| Any other | add a word file ([template](docs/voice-word-pack-template.json)) | add lines under `"lines"` |
+
+The eight extra languages are first drafts and need a quick check by a native speaker before going live. Adding a language means filling in one small word file (words for show, add, remove, first, numbers, units), about 15 minutes, no code. Listening uses the browser's free speech recognition, which covers 60+ languages. With the AI proxy and `"voice": { "mode": "ai" }`, natural voices are used and the language is detected automatically. Try it at `/grocery.html`, or `/grocery.html?mode=screen` for screen mode.
 
 ## Bring your own AI key
 

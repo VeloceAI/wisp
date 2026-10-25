@@ -1,5 +1,6 @@
 import { fill, type Lang, type Localized } from './lang';
 import { SHOP_LINES } from '../shop/lines';
+import { withIndicLines } from '../shop/lines-indic';
 
 export type LineSet = Partial<Record<Lang, string[]>>;
 export type LineBank = Record<string, LineSet>;
@@ -148,7 +149,7 @@ export class Lines {
     overrides: Record<string, Localized | Localized[]> = {},
     private random: () => number = Math.random,
   ) {
-    this.bank = { ...DEFAULT_LINES, ...SHOP_LINES };
+    this.bank = withIndicLines({ ...DEFAULT_LINES, ...SHOP_LINES });
     for (const [id, value] of Object.entries(overrides)) this.bank[id] = toLineSet(value);
   }
 

@@ -1,4 +1,4 @@
-import { AiAnswerer, pageFacts, pageForPlanner, parsePlan, redact, type AiPlanner, withTimeout, type ChatReply, type ChatTransport, type Guide, type KeyValueStore } from '@veloceai/wisp-core';
+import { AiAnswerer, pageFacts, pageForPlanner, parsePlan, redact, type AiPlanner, type Translator, withTimeout, type ChatReply, type ChatTransport, type Guide, type KeyValueStore } from '@veloceai/wisp-core';
 
 /** A random id per browser so the proxy can cap AI calls per visitor. Not linked to the person. */
 export function visitorId(store: KeyValueStore): string {
@@ -38,6 +38,20 @@ export function proxyPlanner(endpoint: string, visitor: string, timeoutMs = 1000
       if (!res.ok) return null;
       const { raw } = (await res.json()) as { raw: string };
       return parsePlan(raw, goal, new Set(model.elements.filter((e) => !e.sensitive).map((e) => e.ref)), new Set(actions.map((a) => a.name)));
+    });
+}
+
+export function proxyTranslator(endpoint: string, visitor: string): Translator {
+  const base = endpoint.replace(/\/$/, '');
+  return (text) =>
+    withTimeout(6000, async (signal) => {
+      const res = await fetch(`${base}/translate`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-wisp-visitor': visitor },
+        body: JSON.stringify({ text: redact(text) }),
+        signal,
+      });
+      return res.ok ? (((await res.json()) as { item: string | null }).item ?? null) : null;
     });
 }
 

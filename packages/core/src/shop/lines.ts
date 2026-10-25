@@ -53,6 +53,11 @@ export const SHOP_LINES: LineBank = {
     hi: ['सुरक्षा के लिए मैं सिर्फ़ आवाज़ से ऑर्डर नहीं करता। कृपया “Confirm order” दबाएँ।'],
     hinglish: ['Safety ke liye main sirf awaaz se order nahi karta. Please “Confirm order” dabao.'],
   },
+  'shop.cartOpened': {
+    en: ['I’ve opened your cart. Check it and tap “Place order” yourself when you’re ready.'],
+    hi: ['आपका कार्ट खोल दिया है। जाँच लें और तैयार हों तो “Place order” खुद दबाएँ।'],
+    hinglish: ['Cart khol diya hai. Check karke ready ho toh “Place order” khud dabao.'],
+  },
   'shop.ordered': { en: ['Order placed! 🎉'], hi: ['ऑर्डर हो गया! 🎉'], hinglish: ['Order ho gaya! 🎉'] },
   'shop.cancelled': { en: ['Okay, not now.'], hi: ['ठीक है, अभी नहीं।'], hinglish: ['Theek hai, abhi nahi.'] },
   'shop.bye': { en: ['Happy shopping!'], hi: ['खुश रहिए, फिर मिलेंगे!'], hinglish: ['Happy shopping! Phir milte hain.'] },

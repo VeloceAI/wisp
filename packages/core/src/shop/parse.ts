@@ -73,10 +73,10 @@ function removeAll(c: string, list: string[]): string {
 function clauseIntent(raw: string, w: ShopWordPack): ShopIntent | 'none' {
   let c = raw;
   const n = words(c).length;
-  if (firstHit(c, w.done) && n <= 4) return { kind: 'done' };
   if (firstHit(c, w.checkout)) return { kind: 'checkout' };
   if (firstHit(c, w.cart)) return { kind: 'cart' };
   if (firstHit(c, w.total)) return { kind: 'total' };
+  if (firstHit(c, w.done) && n <= 4) return { kind: 'done' };
 
   const rem = firstHit(c, w.remove);
   if (rem) return { kind: 'remove', query: cleanQuery(removeAll(strip(c, rem), [...w.add]), w) };
@@ -126,8 +126,9 @@ function clauseIntent(raw: string, w: ShopWordPack): ShopIntent | 'none' {
 export function parseShop(text: string, w: ShopWordPack): ShopIntent[] {
   let c = normalize(text);
   for (const m of w.more) c = c.split(` ${m} `).join(MORE_TOKEN);
+  const joiners = (w.and ?? []).map(escape).join('|');
   const clauses = c
-    .split(/ , | and then | then | and | aur | और | phir | fir | फिर | & /)
+    .split(new RegExp(` , ${joiners ? `| (?:${joiners}) ` : ''}`))
     .map((s) => ` ${s.trim()} `)
     .filter((s) => s.trim());
   const parsed = clauses.map((cl) => ({ cl, intent: clauseIntent(cl, w) }));

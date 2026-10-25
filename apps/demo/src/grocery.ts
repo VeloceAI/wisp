@@ -101,6 +101,18 @@ const shop: ShopAdapter = {
 };
 
 document.getElementById('checkout')!.addEventListener('click', () => shop.checkout!());
+document.getElementById('cart-btn')!.addEventListener('click', () => document.getElementById('cart')!.scrollIntoView({ behavior: 'smooth' }));
+// The store's own search box. In screen mode Wisp types here, like a person would.
+document.getElementById('site-search')!.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const q = String(new FormData(e.target as HTMLFormElement).get('q') ?? '').trim();
+  void shop.search(q);
+});
+// ?mode=screen leaves the store unconnected, so Wisp works only through the page.
+const screenMode = new URLSearchParams(location.search).get('mode') === 'screen';
+document.getElementById('mode-note')!.textContent = screenMode
+  ? 'Screen mode: Wisp is using the page’s own search box and buttons.'
+  : 'Connected mode (try ?mode=screen to see Wisp work without any integration).';
 renderGrid(CATALOG);
 renderCart();
 
@@ -128,6 +140,6 @@ const wisp = mount(
       },
     },
   },
-  { shop },
+  screenMode ? {} : { shop },
 );
 (window as unknown as { wisp: typeof wisp }).wisp = wisp;

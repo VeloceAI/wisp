@@ -32,6 +32,8 @@ export interface ShopAdapter {
   remove?(productId: string): Promise<void>;
   cart(): Promise<Cart>;
   checkout?(): Promise<void>;
+  /** For stores Wisp can't order in: opens the cart so the visitor places the order themselves. */
+  openCart?(): Promise<void>;
 }
 
 export interface ShopConfig {
@@ -42,7 +44,12 @@ export interface ShopConfig {
   words?: Partial<ShopWordPack>[];
   /** How many search results to read out. */
   readOut?: number;
+  /** Language the catalogue is written in. "en" (default) turns "pyaaz" into "onion" before searching. */
+  searchLanguage?: string;
 }
+
+/** Turns a product name into the catalogue's language (usually via AI); null when it can't. */
+export type Translator = (query: string) => Promise<string | null>;
 
 export interface ShopWordPack {
   lang: string;
@@ -67,4 +74,6 @@ export interface ShopWordPack {
   units: Record<string, string>;
   /** Words that mean "below this price". */
   under: string[];
+  /** Words that join list items ("and", "aur"). */
+  and?: string[];
 }

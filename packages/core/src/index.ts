@@ -30,3 +30,5 @@ export * from './shop/types';
 export * from './shop/words';
 export * from './shop/parse';
 export { ShopAssistant } from './shop/assistant';
+export * from './shop/catalog-words';
+export * from './ai/translate-service';

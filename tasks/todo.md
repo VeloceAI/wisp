@@ -91,3 +91,9 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - Tests: 116 passing. Headless Chrome run of the full conversation on the demo.
 - Not covered: live microphone (needs a person; the loop is tested with a scripted voice), barge-in while speaking (tap the mic instead).
 - Next (phase B, AI): open-ended lists and recipes, budgets, smarter substitutes, AI intent fallback for languages without a pack.
+
+### Voice shopping, phase B part 1 (2026-10-26)
+- Search language: built-in grocery dictionary (~150 words, Hindi/Hinglish + some Indian scripts) → catalogue English; store synonyms; AI translate only on a miss, cached on the proxy (`/translate`).
+- Screen mode: ScreenShop adapter uses the store's own search box, reads product cards (name, unit, price, stock, Add/+/−), taps them, reads the page's cart total, opens the cart instead of ordering. Enabled by `"shop": {}` with no registerShop.
+- Word packs and reply lines for ta, te, bn, mr, gu, kn, ml, pa (first drafts; need native review). Pack field `and` for list joiners; done-words now checked after total/cart/checkout ("kitna ho gaya").
+- Tests: 130 passing. Real Chrome: Tamil, Hindi and Hinglish screen-mode conversation on /grocery.html?mode=screen.

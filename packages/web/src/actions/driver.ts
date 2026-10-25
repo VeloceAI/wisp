@@ -85,7 +85,7 @@ export class DomDriver implements ActionDriver {
   }
 }
 
-function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: string) {
+export function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: string) {
   // Frameworks like React track the value setter, so set it through the prototype.
   const proto = Object.getPrototypeOf(el) as object;
   const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
@@ -94,7 +94,7 @@ function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectE
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-async function typeInto(el: HTMLInputElement, text: string) {
+export async function typeInto(el: HTMLInputElement, text: string) {
   el.focus();
   const chunks = Math.min(6, Math.max(1, Math.ceil(text.length / 4)));
   for (let i = 1; i <= chunks; i++) {
@@ -122,7 +122,7 @@ function choose(el: HTMLElement, option: string) {
   el.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
-function submit(el: HTMLElement) {
+export function submit(el: HTMLElement) {
   const form = el.closest('form');
   if (form) form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   else pressKey(el, 'Enter');
