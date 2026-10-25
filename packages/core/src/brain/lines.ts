@@ -1,4 +1,5 @@
 import { fill, type Lang, type Localized } from './lang';
+import { SHOP_LINES } from '../shop/lines';
 
 export type LineSet = Partial<Record<Lang, string[]>>;
 export type LineBank = Record<string, LineSet>;
@@ -120,6 +121,10 @@ export const UI_STRINGS = {
   on: { en: 'On', hi: 'चालू', hinglish: 'On' },
   off: { en: 'Off', hi: 'बंद', hinglish: 'Off' },
   speak: { en: 'Speak', hi: 'बोलें', hinglish: 'Bolo' },
+  confirmOrder: { en: 'Confirm order', hi: 'ऑर्डर कन्फ़र्म करें', hinglish: 'Confirm order' },
+  cancel: { en: 'Cancel', hi: 'रद्द करें', hinglish: 'Cancel' },
+  talk: { en: 'Talk', hi: 'बोलें', hinglish: 'Bolo' },
+  listening: { en: 'Listening… say “done” to stop', hi: 'सुन रहा हूँ… रोकने के लिए “बस” कहें', hinglish: 'Sun raha hoon… rokne ke liye “bas” bolo' },
   stop: { en: 'Stop', hi: 'रुकें', hinglish: 'Ruko' },
   yes: { en: 'Yes, go ahead', hi: 'हाँ, करें', hinglish: 'Haan, karo' },
   no: { en: 'No', hi: 'नहीं', hinglish: 'Nahi' },
@@ -143,7 +148,7 @@ export class Lines {
     overrides: Record<string, Localized | Localized[]> = {},
     private random: () => number = Math.random,
   ) {
-    this.bank = { ...DEFAULT_LINES };
+    this.bank = { ...DEFAULT_LINES, ...SHOP_LINES };
     for (const [id, value] of Object.entries(overrides)) this.bank[id] = toLineSet(value);
   }
 

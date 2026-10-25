@@ -1,5 +1,6 @@
 import type { Guide, GuideState, HelpLevel, Lang } from '@veloceai/wisp-core';
 import type { WebVoice } from '../voice';
+import type { TalkLoop } from '../talk';
 import { buttonRow, h } from './dom';
 
 const LANG_NAMES: Record<string, string> = {
@@ -24,8 +25,13 @@ export class ChatView {
     private guide: Guide,
     private onButton: (value: string) => void,
     private voice: WebVoice | null = null,
+    private talk: TalkLoop | null = null,
   ) {
-    this.mic = h('button', { type: 'button', class: 'icon-btn mic', hidden: true, onclick: () => void this.listen() }, '🎤');
+    this.mic = h('button', { type: 'button', class: 'icon-btn mic', hidden: true, onclick: () => (this.talk ? this.talk.toggle() : void this.listen()) }, '🎤');
+    talk?.onChange((on) => {
+      this.mic.classList.toggle('live', on);
+      this.input.placeholder = on ? this.guide.t('listening') : this.guide.t('placeholder');
+    });
     this.title = h('span', { class: 'name' });
     this.log = h('div', { class: 'log', role: 'log', 'aria-live': 'polite' });
     this.input = h('input', { type: 'text', autocomplete: 'off', maxlength: '500' });
@@ -49,7 +55,7 @@ export class ChatView {
   update(s: GuideState): void {
     const wasHidden = this.el.hidden;
     this.el.hidden = !s.chatOpen || s.hidden;
-    this.mic.hidden = !(s.voice && this.voice?.canListen);
+    this.mic.hidden = !(this.voice?.canListen && (s.voice || this.talk));
     const key = `${s.lang}|${s.helpLevel}|${s.voice}`;
     if (key !== this.lastKey) {
       this.lastKey = key;

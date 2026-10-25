@@ -1,4 +1,5 @@
 import type { Button, ContentDoc, FaqEntry } from '../brain/config';
+import type { Mood } from '../character/moods';
 import { localize, type Lang } from '../brain/lang';
 import type { Lines } from '../brain/lines';
 import { SearchIndex } from './search';
@@ -9,6 +10,8 @@ export interface ChatAnswer {
   buttons: Button[];
   matched: boolean;
   source?: string;
+  /** Face to show with the answer; defaults to talking, or confused when unmatched. */
+  mood?: Mood;
 }
 
 export interface Answerer {

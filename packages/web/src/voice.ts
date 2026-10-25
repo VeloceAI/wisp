@@ -10,7 +10,11 @@ type Recognition = {
   stop(): void;
 };
 
-const LOCALES: Record<string, string> = { en: 'en-IN', hi: 'hi-IN', hinglish: 'en-IN' };
+// Indian English handles Hinglish best in browser recognisers; other codes pass through (e.g. "fr" → French).
+const LOCALES: Record<string, string> = {
+  en: 'en-IN', hi: 'hi-IN', hinglish: 'en-IN', ta: 'ta-IN', te: 'te-IN', bn: 'bn-IN', mr: 'mr-IN', gu: 'gu-IN',
+  kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN', ur: 'ur-IN', or: 'or-IN', as: 'as-IN',
+};
 const locale = (lang: Lang) => LOCALES[lang] ?? lang;
 
 export interface VoiceOptions {
@@ -36,8 +40,21 @@ export class WebVoice {
     return !!speechRecognitionCtor() || (this.opts.mode === 'ai' && !!this.opts.endpoint && typeof MediaRecorder !== 'undefined');
   }
 
-  async speak(text: string, lang: Lang, lineId?: string): Promise<void> {
+  private current: Promise<void> = Promise.resolve();
+
+  /** Resolves when the line has finished playing (or was stopped). */
+  speak(text: string, lang: Lang, lineId?: string): Promise<void> {
     this.stop();
+    this.current = this.say(text, lang, lineId);
+    return this.current;
+  }
+
+  /** Resolves once nothing is being said. */
+  idle(): Promise<void> {
+    return this.current;
+  }
+
+  private async say(text: string, lang: Lang, lineId?: string): Promise<void> {
     const clip = (lineId && this.opts.clips?.[lineId]) || this.opts.clips?.[text];
     try {
       if (clip) return await this.play(clip);
@@ -45,7 +62,7 @@ export class WebVoice {
     } catch {
       /* fall back to the built-in voice */
     }
-    this.browserSpeak(text, lang);
+    return this.browserSpeak(text, lang);
   }
 
   stop(): void {
@@ -115,21 +132,34 @@ export class WebVoice {
     return url;
   }
 
-  private play(src: string): Promise<void> {
+  private async play(src: string): Promise<void> {
     const audio = new Audio(src);
     this.audio = audio;
-    return audio.play();
+    const ended = new Promise<void>((resolve) => {
+      audio.onended = () => resolve();
+      audio.onpause = () => resolve();
+    });
+    await audio.play();
+    await ended;
   }
 
-  private browserSpeak(text: string, lang: Lang): void {
-    if (typeof speechSynthesis === 'undefined') return;
+  private browserSpeak(text: string, lang: Lang): Promise<void> {
+    if (typeof speechSynthesis === 'undefined') return Promise.resolve();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = locale(lang);
     const voice = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(u.lang.toLowerCase().slice(0, 2)));
     if (voice) u.voice = voice;
     u.rate = 1.02;
     u.pitch = 1.15;
-    speechSynthesis.speak(u);
+    return new Promise((resolve) => {
+      // Some browsers never fire onend; don't wait forever.
+      const t = setTimeout(resolve, 2000 + text.length * 90);
+      u.onend = u.onerror = () => {
+        clearTimeout(t);
+        resolve();
+      };
+      speechSynthesis.speak(u);
+    });
   }
 }
 

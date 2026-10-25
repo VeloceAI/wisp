@@ -11,6 +11,8 @@ import {
   type Mood,
   type PageModel,
   type SiteActionHandler,
+  type ShopAdapter,
+  ShopAssistant,
   ActionRunner,
   localize,
   type TrackEvent,
@@ -26,6 +28,7 @@ import { cssEscape, safeQueryAll, watchSections } from './watch/sections';
 import { browserStore } from './storage';
 import { connectAI, visitorId } from './ai';
 import { WebVoice } from './voice';
+import { TalkLoop } from './talk';
 import { PageReader } from './page/reader';
 import { DomDriver } from './actions/driver';
 import { proxyPlanner } from './ai';
@@ -40,6 +43,8 @@ export interface MountOptions {
   onAction?: (value: string) => void;
   /** Same-site page changes go through this (e.g. Next.js `router.push`) instead of a full reload. */
   navigate?: (path: string) => void;
+  /** Your store's search, cart and checkout, for voice and chat shopping. */
+  shop?: ShopAdapter;
 }
 
 export interface WispInstance {
@@ -52,6 +57,10 @@ export interface WispInstance {
   run(instruction: string): Promise<boolean>;
   /** Handle a declared action yourself instead of receiving a `wisp:run` event. */
   registerAction(name: string, handler: SiteActionHandler): void;
+  /** Turns on shopping by voice and chat: "give me onion", "first one in cart", "order kar do". */
+  registerShop(shop: ShopAdapter): void;
+  /** Starts or stops talk mode. */
+  talk(): void;
   stop(): void;
   openChat(): void;
   startTour(): void;
@@ -80,7 +89,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     aiPlanner: config.ai?.endpoint ? proxyPlanner(config.ai.endpoint, visitorId(store)) : undefined,
     stepDelayMs: win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 250 : 700,
   });
-  guide.actions = actions;
+  guide.use(actions);
   guide.faq.extra = (lang) =>
     (config.actions ?? []).filter((a) => a.button).map((a) => ({ label: localize(a.button, lang), value: `run:${a.name}` }));
   const voice =
@@ -103,7 +112,10 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const bubble = h('div', { class: 'bubble', role: 'status', 'aria-live': 'polite' });
   const highlight = h('div', { class: 'highlight' });
   const tab = h('button', { type: 'button', class: `tab ${corner === 'bottom-left' ? 'left' : 'right'}`, hidden: true, onclick: () => guide.dispatch({ type: 'show' }) });
-  const chat = new ChatView(guide, (v) => guide.dispatch({ type: 'button', value: v }), voice);
+  const talkLoop = voice && config.voice !== false && config.voice?.talk !== false ? new TalkLoop(guide, voice, config.shop?.words) : null;
+  const chat = new ChatView(guide, (v) => guide.dispatch({ type: 'button', value: v }), voice, talkLoop);
+  const registerShop = (shop: ShopAdapter) => guide.use(new ShopAssistant(guide, shop, config.shop), { first: true });
+  if (opts.shop) registerShop(opts.shop);
   const layer = h('div', { class: 'layer' }, highlight, figure, bubble, chat.el, tab);
   applyTheme(layer, config, def);
   shadow.append(h('style', {}, STYLES), layer);
@@ -309,6 +321,11 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     read: () => reader.read(),
     run: (instruction) => actions.handle(instruction),
     registerAction: (name, handler) => void driver.handlers.set(name, handler),
+    registerShop,
+    talk: () => {
+      guide.dispatch({ type: 'chat-open' });
+      talkLoop?.toggle();
+    },
     stop: () => actions.stop(),
     openChat: () => guide.dispatch({ type: 'chat-open' }),
     startTour: () => guide.dispatch({ type: 'button', value: 'tour:start' }),
@@ -316,6 +333,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     show: () => guide.dispatch({ type: 'show' }),
     destroy: () => {
       actions.stop();
+      talkLoop?.stop();
       cancelAnimationFrame(raf);
       clearInterval(relayout);
       unsubs.forEach((u) => u());

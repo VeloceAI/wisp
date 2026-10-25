@@ -3,6 +3,7 @@ import type { Mood } from '../character/moods';
 import type { Lang, Localized } from './lang';
 import type { UiOverrides } from './lines';
 import type { SiteActionDecl } from '../actions/types';
+import type { ShopConfig } from '../shop/types';
 
 export type HelpLevel = 'auto' | 'lots' | 'tips';
 
@@ -92,7 +93,9 @@ export interface GuideConfig {
    * Voice is off until the visitor turns it on. `false` hides the option.
    * "browser" uses the built-in voice; "ai" uses the proxy's natural voice and falls back to the browser.
    */
-  voice?: false | { mode?: 'browser' | 'ai'; clips?: Record<string, string> };
+  voice?: false | { mode?: 'browser' | 'ai'; clips?: Record<string, string>; talk?: boolean };
+  /** Voice and chat shopping settings; the store itself is passed with `registerShop`. */
+  shop?: ShopConfig;
 }
 
 export type GuideSize = 'small' | 'medium' | 'large' | number;

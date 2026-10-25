@@ -26,3 +26,7 @@ export * from './actions/types';
 export * from './actions/rule-planner';
 export * from './actions/runner';
 export * from './ai/plan-service';
+export * from './shop/types';
+export * from './shop/words';
+export * from './shop/parse';
+export { ShopAssistant } from './shop/assistant';

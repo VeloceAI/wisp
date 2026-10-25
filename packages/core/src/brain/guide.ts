@@ -5,14 +5,15 @@ import { GuideMemory, InMemoryStore, type KeyValueStore } from '../memory/memory
 import type { Button, GuideConfig, HelpLevel } from './config';
 import { detectLang, langFromLocale, type Localized } from './lang';
 import { Lines, toLineSet, uiText, type UiStringKey } from './lines';
-import type { ActionRunner } from '../actions/runner';
 import { answerPageQuestion, pageFallback, type PageSource } from './page-chat';
 import { reactToApp } from './reactions';
+import { TipScheduler } from './tips';
 import { TourRunner } from './tour';
 import {
   realScheduler,
   type Bubble,
   type BubbleKind,
+  type CommandHandler,
   type Cue,
   type GuideEvent,
   type GuideState,
@@ -67,17 +68,14 @@ export class Guide {
   private tempMood: Mood | null = null;
   private bubbleSeq = 0;
   private taps: number[] = [];
-  private lastTipAt = -Infinity;
-  private shownTips = new Set<string>();
   private loading = false;
   private nudged = false;
   private started = false;
   private tour: TourRunner;
   private random: () => number;
-  private overlayOpen: () => boolean;
-  private pendingTip: string | null = null;
   page: PageSource | null;
-  actions: ActionRunner | null = null;
+  private handlers: CommandHandler[] = [];
+  private tips: TipScheduler;
 
   constructor(config: GuideConfig = {}, deps: GuideDeps = {}) {
     this.config = config;
@@ -85,7 +83,7 @@ export class Guide {
     this.character = defineCharacter(charInput);
     this.sched = deps.scheduler ?? realScheduler;
     this.random = deps.random ?? Math.random;
-    this.overlayOpen = deps.overlayOpen ?? (() => false);
+    this.tips = new TipScheduler(this, deps.overlayOpen ?? (() => false), () => this.sched.now());
     this.memory = new GuideMemory(deps.store ?? new InMemoryStore(), config.siteId);
     this.lines = new Lines(config.lines, deps.random);
     this.faq = new FaqChat(config.faq ?? [], config.content ?? [], this.lines);
@@ -131,6 +129,12 @@ export class Guide {
 
   setAnswerer(answerer: Answerer): void {
     this.answerer = answerer;
+  }
+
+  /** Adds something that takes typed or spoken commands before normal answers. Earlier ones win. */
+  use(handler: CommandHandler, opts: { first?: boolean } = {}): void {
+    if (opts.first) this.handlers.unshift(handler);
+    else this.handlers.push(handler);
   }
 
   /** Highlights a target and sits beside it for a few seconds. */
@@ -252,7 +256,7 @@ export class Guide {
       case 'activity':
         return this.onActivity();
       case 'section':
-        return this.onSection(e.id);
+        return this.tips.onSection(e.id);
       case 'app':
         this.resetIdle();
         return reactToApp(this, e.name, e.detail);
@@ -367,9 +371,11 @@ export class Guide {
       if (detected !== this.state.lang) this.patch({ lang: detected });
     }
     this.patch({ chatOpen: true, busy: true, messages: [...this.state.messages, { from: 'user', text: question }] });
-    if (this.actions && (await this.actions.handle(question))) {
-      this.patch({ busy: false });
-      return;
+    for (const h of this.handlers) {
+      if (await h.handle(question)) {
+        if (this.state.busy) this.patch({ busy: false });
+        return;
+      }
     }
     this.feel('thinking', 20000);
     let answer: ChatAnswer | null = this.page ? answerPageQuestion(this, this.page, question) : null;
@@ -386,10 +392,10 @@ export class Guide {
     this.reply(answer);
   }
 
-  private reply(answer: ChatAnswer): void {
+  reply(answer: ChatAnswer): void {
     this.patch({ busy: false, messages: [...this.state.messages, { from: 'guide', text: answer.text, buttons: answer.buttons }] });
     this.cue({ type: 'speak', text: answer.text });
-    this.feel(answer.matched ? 'talking' : 'confused', answer.matched ? 2200 : 1800);
+    this.feel(answer.mood ?? (answer.matched ? 'talking' : 'confused'), answer.matched ? 2200 : 1800);
   }
 
   private onButton(value: string): void {
@@ -398,8 +404,7 @@ export class Guide {
     if (value === 'chat:open') return this.openChat();
     if (value.startsWith('tour:')) return this.tour.handle(value.slice(5));
     if (value.startsWith('link:')) return this.cue({ type: 'link', href: value.slice(5) });
-    if (value.startsWith('act:')) return this.actions?.button(value);
-    if (value.startsWith('run:')) return void this.actions?.run({ goal: value.slice(4), steps: [{ kind: 'tool', name: value.slice(4) }] });
+    if (this.handlers.some((h) => h.button?.(value))) return;
     if (value.startsWith('point:')) return this.pointAt(`ref:${value.slice(6)}`);
     if (value.startsWith('faq:')) {
       const answer = this.faq.faqAnswer(value, this.state.lang);
@@ -409,33 +414,6 @@ export class Guide {
       return this.reply(answer);
     }
     this.cue({ type: 'custom', value });
-  }
-
-  private onSection(id: string | null): void {
-    this.pendingTip = null;
-    this.clearTimer('tip-retry');
-    if (!id || this.state.hidden) return;
-    const tip = this.config.sections?.find((s) => s.id === id);
-    if (!tip || this.shownTips.has(id)) return;
-    const now = this.sched.now();
-    const wait = (this.config.tipGapMs ?? 8000) - (now - this.lastTipAt);
-    const busy = !!(this.state.tour || this.state.chatOpen || this.state.bubble?.sticky || this.state.acting || this.overlayOpen());
-    if (busy || wait > 0) {
-      // Keep the tip for this section and try again once the way is clear.
-      this.pendingTip = id;
-      this.timer('tip-retry', busy ? 2000 : wait + 50, () => this.pendingTip && this.onSection(this.pendingTip));
-      return;
-    }
-    const regular = this.help() === 'tips';
-    const seen = this.memory.get('seenTips');
-    if (regular && seen.includes(id) && !tip.advanced) return;
-    const source = regular && tip.advanced ? tip.advanced : tip.tip;
-    const text = this.pickLocalized(source);
-    if (!text) return;
-    this.shownTips.add(id);
-    this.lastTipAt = now;
-    if (!seen.includes(id)) this.memory.update({ seenTips: [...seen, id] });
-    this.say(text, { kind: 'tip', mood: tip.mood, anchor: tip.selector ?? id, thinkMs: regular ? 0 : 600 });
   }
 
   get isLoading(): boolean {

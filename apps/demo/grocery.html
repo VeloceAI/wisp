@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuickBasket — Wisp voice shopping demo</title>
+    <link rel="stylesheet" href="/src/grocery.css" />
+  </head>
+  <body>
+    <header class="top">
+      <span class="logo">🧺 QuickBasket</span>
+      <span class="eta">Delivery in 10 minutes</span>
+      <button id="cart-btn" class="cart-btn">Cart · <span id="cart-total">₹0</span></button>
+    </header>
+    <main>
+      <section class="try" data-wisp="off">
+        <h2>Try talking to Sprout</h2>
+        <p>Tap Sprout, then tap 🎤 and say (or type):</p>
+        <ul>
+          <li>“give me onion” → “put first one in cart”</li>
+          <li>“2 kilo tamatar aur doodh daal do”</li>
+          <li>“sabse sasta chips dikhao” → “pehla wala daalo”</li>
+          <li>“ek aur” · “remove tomato” · “total kitna hua” · “order kar do”</li>
+          <li>Hindi: “दो किलो प्याज़ डाल दो”</li>
+        </ul>
+      </section>
+      <section>
+        <h2 id="results-title">Popular</h2>
+        <div id="grid" class="grid"></div>
+      </section>
+    </main>
+    <aside id="cart" class="cart" aria-label="Cart">
+      <h2>Your cart</h2>
+      <ul id="cart-lines"></ul>
+      <div class="cart-total">Total <b id="cart-sum">₹0</b></div>
+      <button id="checkout" disabled>Place order</button>
+    </aside>
+    <script type="module" src="/src/grocery.ts"></script>
+  </body>
+</html>

@@ -82,6 +82,14 @@ export type Cue =
   | { type: 'custom'; value: string }
   | { type: 'track'; event: TrackEvent };
 
+/** Takes typed or spoken commands before the normal chat answer (e.g. actions, shopping). */
+export interface CommandHandler {
+  /** True when it took the text and replied. */
+  handle(text: string): Promise<boolean>;
+  /** True when the button value was its own. */
+  button?(value: string): boolean;
+}
+
 export interface Scheduler {
   setTimeout(fn: () => void, ms: number): unknown;
   clearTimeout(handle: unknown): void;

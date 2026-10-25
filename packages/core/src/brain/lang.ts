@@ -14,7 +14,7 @@ export function fill(text: string, vars: Record<string, string | number> = {}): 
 }
 
 const HINGLISH_MARKERS = new Set(
-  'hai hain kya kaise kaisa mujhe mera meri mere karna karo karu karun nahi nahin kahan kahaan kab kyun kyu chahiye hoga hogi raha rahi rahe wala wali bhai yaar kuch aap tum batao bata dikhao dikha ka ki ke ko mein toh bhi accha acha theek thik haan matlab kidhar kitna kitne kitni sakta sakti sakte lena dena milega milta'.split(' '),
+  'hai hain kya kaise kaisa mujhe mera meri mere karna karo karu karun nahi nahin kahan kahaan kab kyun kyu chahiye hoga hogi raha rahi rahe wala wali bhai yaar kuch aap tum batao bata dikhao dikha ka ki ke ko mein toh bhi accha acha theek thik haan matlab kidhar kitna kitne kitni sakta sakti sakte lena dena milega milta hua hui aur daal daalo dalo wala wali sabse sasta pehla doosra dikhao karo kardo chahiye'.split(' '),
 );
 
 /** Scripts that identify a language on their own. Devanagari is treated as Hindi. */

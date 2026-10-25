@@ -84,3 +84,10 @@ The character is drawn from pure geometry computed in core, so web (SVG DOM) and
 - Browser check: the brief's example ran on the demo shop end to end.
 - Fixed: demo shop search matched literally; now matches words.
 - Next: step 5 (Expo renderer) and step 6 (adaptive memory, owner report) in a later session.
+
+### Voice shopping, phase A (2026-10-26)
+- Shipped: shopping parser with word packs (en, hinglish, hi; any other language via a pack), ShopAssistant (find, pick by number/cheapest, amounts turned into pack sizes, lists, more/set/remove, cart, total, checkout that needs a tap), talk mode loop (listen → reply spoken → listen until "done/bas" or two silences), registerShop / `shop` option, Indian speech locales, QuickBasket demo at /grocery.html, word-pack template.
+- Tidy: guide.ts split (tips scheduler, command handlers) back to 472 lines.
+- Tests: 116 passing. Headless Chrome run of the full conversation on the demo.
+- Not covered: live microphone (needs a person; the loop is tested with a scripted voice), barge-in while speaking (tap the mic instead).
+- Next (phase B, AI): open-ended lists and recipes, budgets, smarter substitutes, AI intent fallback for languages without a pack.

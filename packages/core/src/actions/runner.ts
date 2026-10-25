@@ -1,4 +1,5 @@
 import type { Guide } from '../brain/guide';
+import type { CommandHandler } from '../brain/types';
 import type { KeyValueStore } from '../memory/memory';
 import type { PageElement, PageModel } from '../page/model';
 import { describeElement } from '../page/understand';
@@ -24,7 +25,7 @@ export const FINAL_WORDS =
   /\b(pay|buy|purchase|place order|checkout|check out|confirm|delete|remove|send|submit|transfer|book|subscribe|sign ?up|register|log ?out|sign ?out|cancel|unsubscribe|donate|withdraw|order now)\b/i;
 
 /** Runs instructions step by step, narrating, highlighting, asking before anything final, and stoppable. */
-export class ActionRunner {
+export class ActionRunner implements CommandHandler {
   private abort: AbortController | null = null;
   private confirmWaiter: ((yes: boolean) => void) | null = null;
 
@@ -125,14 +126,23 @@ export class ActionRunner {
     this.end('act.stopped', 'idle');
   }
 
-  /** Routes `act:*` buttons from the bubble. */
-  button(value: string): void {
-    if (value === 'act:stop') return this.stop();
+  /** Routes `act:*` buttons from the bubble and `run:<action>` tap-to-run buttons. */
+  button(value: string): boolean {
+    if (value.startsWith('run:')) {
+      void this.run({ goal: value.slice(4), steps: [{ kind: 'tool', name: value.slice(4) }] });
+      return true;
+    }
+    if (value === 'act:stop') {
+      this.stop();
+      return true;
+    }
     if (value === 'act:yes' || value === 'act:no') {
       const w = this.confirmWaiter;
       this.confirmWaiter = null;
       w?.(value === 'act:yes');
+      return true;
     }
+    return false;
   }
 
   private confirm(step: ActionStep, el: PageElement | null): Promise<boolean> {

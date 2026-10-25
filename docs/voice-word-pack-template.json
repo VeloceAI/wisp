@@ -1,0 +1,22 @@
+{
+  "_how": "Copy this, fill in your language, and put it under \"shop\": { \"words\": [ ...here... ] } in your Wisp config. Leave out any list you don't need. Phrases are matched as whole words, lower-case.",
+  "lang": "ta",
+  "find": ["காட்டு", "தேடு"],
+  "add": ["சேர்", "போடு", "வேணும்"],
+  "remove": ["நீக்கு", "எடு"],
+  "cart": ["கார்ட்டில் என்ன"],
+  "total": ["மொத்தம் எவ்வளவு"],
+  "checkout": ["ஆர்டர் பண்ணு"],
+  "more": ["இன்னும் ஒன்று"],
+  "setTo": ["ஆக்கு"],
+  "done": ["போதும்", "அவ்வளவுதான்"],
+  "yes": ["ஆமா", "சரி"],
+  "no": ["வேண்டாம்", "இல்லை"],
+  "cheapest": ["மலிவான"],
+  "costliest": ["விலை உயர்ந்த"],
+  "fillers": ["எனக்கு", "கொஞ்சம்"],
+  "ordinals": { "முதல்": 1, "இரண்டாவது": 2, "மூன்றாவது": 3, "கடைசி": -1 },
+  "numbers": { "ஒன்று": 1, "இரண்டு": 2, "மூன்று": 3, "அரை": 0.5 },
+  "units": { "கிலோ": "kg", "கிராம்": "g", "லிட்டர்": "l", "பாக்கெட்": "pack" },
+  "under": ["குறைவாக", "க்குள்"]
+}

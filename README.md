@@ -187,6 +187,43 @@ Wisp.instance.registerAction('search', ({ query, maxPrice }) => runMySearch(quer
 
 Actions with a `button` appear as tap-to-run buttons in chat, so they work without typing or AI. Run one from code with `Wisp.instance.run('sort by price')`. If a step opens a new page, Wisp carries on with the rest after it loads.
 
+## Shop by voice
+
+Like a quick-commerce assistant: tap 🎤 and keep talking until you say "done" or "bas". Wisp replies out loud and listens again.
+
+> "give me onion" → *"I found 3. 1: Onion 1 kg, ₹39. 2: Red Onion 500 g, ₹24…"*
+> "put first one in cart" → *"Added 1 × Onion. Cart total ₹39."*
+> "2 kilo tamatar aur doodh daal do" · "sabse sasta chips dikhao" · "ek aur" · "remove tomato" · "total kitna hua" · "order kar do"
+
+<p align="center"><img src="docs/assets/screens/grocery.png" width="720" alt="Voice shopping on the QuickBasket demo" /></p>
+
+It understands:
+- **Find:** "give me onion", "pyaaz dikhao", "milk under 60", "sabse sasta chips".
+- **Pick:** "first one", "doosra", "the cheapest", "aakhri wala".
+- **Amount:** "2 kilo" becomes two 1 kg packs, or four 500 g packs if that's all there is. Also "3 packets", "ek aur", "make it 4".
+- **Lists:** "onion, tomato aur 2 litre milk daal do".
+- **Cart:** "remove tomato", "what's in my cart", "total kitna hua".
+- **Checkout:** "order kar do" reads back the total. **It never orders on voice alone**: the visitor taps "Confirm order".
+
+Give Wisp your store's search, cart and checkout:
+
+```js
+Wisp.instance.registerShop({
+  search: async (query, { maxPrice } = {}) => [{ id, name, price, unit, inStock }],
+  add: async (id, qty) => {},
+  setQty: async (id, qty) => {},   // optional
+  remove: async (id) => {},        // optional
+  cart: async () => ({ lines: [{ id, name, qty, price }], total }),
+  checkout: async () => {},        // only ever called after a tap on Confirm
+});
+```
+
+```json
+"shop": { "currency": "₹", "synonyms": { "pyaaz": "onion", "kanda": "onion", "doodh": "milk" } }
+```
+
+**Any language.** English, Hindi and Hinglish come built in. For any other language, add a word pack under `"shop": { "words": [...] }`; [docs/voice-word-pack-template.json](docs/voice-word-pack-template.json) shows Tamil. Listening uses the browser's own speech recognition (60+ languages, including all major Indian ones) for free. With the AI proxy and `"voice": { "mode": "ai" }`, natural AI voices are used and the language is detected automatically. Try it at `/grocery.html` in the demo.
+
 ## Bring your own AI key
 
 Wisp works without AI. To let it answer in its own words, run the tiny proxy on your server; the key never reaches visitors' browsers.

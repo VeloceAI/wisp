@@ -1,0 +1,26 @@
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, "Segoe UI", sans-serif; color: #1b2a22; background: #f6faf3; }
+.top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: #ffd23f; }
+.logo { font-weight: 800; font-size: 19px; }
+.eta { flex: 1; font-weight: 600; }
+.cart-btn, button { font: inherit; border: 0; border-radius: 10px; padding: 9px 14px; background: #0c831f; color: #fff; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+main { max-width: 1000px; margin: 0 auto; padding: 16px 20px 140px; margin-right: 320px; }
+.try { background: #fff; border-radius: 14px; padding: 12px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.try h2 { margin: 4px 0; font-size: 17px; }
+.try ul { margin: 6px 0; padding-left: 20px; color: #3d5a47; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.card { background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 4px; }
+.card .emoji { font-size: 44px; text-align: center; background: #f1f6ee; border-radius: 10px; padding: 8px 0; }
+.card .name { font-weight: 600; font-size: 14px; }
+.card .unit { color: #6b7f72; font-size: 13px; }
+.card .row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.card .row button { padding: 5px 12px; background: #fff; color: #0c831f; border: 1px solid #0c831f; }
+.card.oos { opacity: .55; }
+.cart { position: fixed; top: 64px; right: 16px; width: 290px; background: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 4px 18px rgba(0,0,0,.1); }
+.cart h2 { margin: 0 0 8px; font-size: 17px; }
+.cart ul { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow: auto; }
+.cart li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e3ebe0; font-size: 14px; }
+.cart-total { display: flex; justify-content: space-between; margin: 10px 0; }
+.cart #checkout { width: 100%; }
+@media (max-width: 760px) { main { margin-right: auto; } .cart { position: static; width: auto; margin: 0 16px 120px; } }
