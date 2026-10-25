@@ -99,6 +99,7 @@ export function muxVideo(rawVideo: string, clips: Clip[], startsMs: number[], ou
   }
   const m = voiced.length + 1;
   const bed = `[${m}:a]aresample=44100,volume=0.22,afade=t=in:d=1.5[bed0];[bed0][vk]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[bed]`;
-  const final = `${mix},asplit=2[voice][vk];${bed};[voice][bed]amix=inputs=2:normalize=0:duration=longest[out]`;
+  // apad keeps the voice track (and so the ducking) running past its last word; -shortest then ends at the video's end.
+  const final = `${mix},apad,asplit=2[voice][vk];${bed};[voice][bed]amix=inputs=2:normalize=0:duration=longest[out]`;
   execFileSync(FFMPEG, [...args, '-stream_loop', '-1', '-i', music, '-filter_complex', `${delays};${final}`, '-map', '0:v', '-map', '[out]', ...video, '-c:a', 'aac', '-b:a', '160k', '-shortest', out]);
 }
