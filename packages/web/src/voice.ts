@@ -1,21 +1,5 @@
 import type { Lang } from '@veloceai/wisp-core';
-
-type Recognition = {
-  lang: string;
-  interimResults: boolean;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-  start(): void;
-  stop(): void;
-};
-
-// Indian English handles Hinglish best in browser recognisers; other codes pass through (e.g. "fr" → French).
-const LOCALES: Record<string, string> = {
-  en: 'en-IN', hi: 'hi-IN', hinglish: 'en-IN', ta: 'ta-IN', te: 'te-IN', bn: 'bn-IN', mr: 'mr-IN', gu: 'gu-IN',
-  kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN', ur: 'ur-IN', or: 'or-IN', as: 'as-IN',
-};
-const locale = (lang: Lang) => LOCALES[lang] ?? lang;
+import { Listener, speechLocale as locale, type ListenerOptions } from './listen/listener';
 
 export interface VoiceOptions {
   mode: 'browser' | 'ai';
@@ -23,6 +7,7 @@ export interface VoiceOptions {
   visitor?: string;
   /** Pre-recorded audio by line id or exact text; played instead of generating speech. */
   clips?: Record<string, string>;
+  listen?: ListenerOptions;
 }
 
 /**
@@ -32,12 +17,14 @@ export interface VoiceOptions {
 export class WebVoice {
   private audio: HTMLAudioElement | null = null;
   private urls = new Map<string, string>();
-  private recognition: Recognition | null = null;
+  private listener: Listener;
 
-  constructor(private opts: VoiceOptions) {}
+  constructor(private opts: VoiceOptions) {
+    this.listener = new Listener({ endpoint: opts.endpoint, visitor: opts.visitor, ...opts.listen });
+  }
 
   get canListen(): boolean {
-    return !!speechRecognitionCtor() || (this.opts.mode === 'ai' && !!this.opts.endpoint && typeof MediaRecorder !== 'undefined');
+    return this.listener.available;
   }
 
   private current: Promise<void> = Promise.resolve();
@@ -71,50 +58,13 @@ export class WebVoice {
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
   }
 
-  /** Listens once and resolves with what was heard ('' if nothing). */
+  /** Listens once and resolves with what was heard ('' if nothing), on any browser or device. */
   listen(lang: Lang): Promise<string> {
-    const Ctor = speechRecognitionCtor();
-    if (Ctor) {
-      return new Promise((resolve) => {
-        const r = new Ctor();
-        this.recognition = r;
-        r.lang = locale(lang);
-        r.interimResults = false;
-        let heard = '';
-        r.onresult = (e) => (heard = e.results[0]?.[0]?.transcript ?? '');
-        r.onerror = () => resolve('');
-        r.onend = () => resolve(heard);
-        r.start();
-      });
-    }
-    return this.recordAndTranscribe(lang);
+    return this.listener.listen(lang).catch(() => '');
   }
 
   stopListening(): void {
-    this.recognition?.stop();
-    this.recorder?.stop();
-  }
-
-  private recorder: MediaRecorder | null = null;
-
-  private async recordAndTranscribe(lang: Lang): Promise<string> {
-    if (!this.opts.endpoint) return '';
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const rec = new MediaRecorder(stream);
-    this.recorder = rec;
-    const chunks: Blob[] = [];
-    rec.ondataavailable = (e) => chunks.push(e.data);
-    const done = new Promise<void>((r) => (rec.onstop = () => r()));
-    rec.start();
-    setTimeout(() => rec.state === 'recording' && rec.stop(), 8000);
-    await done;
-    stream.getTracks().forEach((t) => t.stop());
-    const res = await fetch(`${this.opts.endpoint.replace(/\/$/, '')}/stt?lang=${encodeURIComponent(lang)}`, {
-      method: 'POST',
-      headers: { 'x-wisp-visitor': this.opts.visitor ?? '' },
-      body: new Blob(chunks, { type: rec.mimeType }),
-    });
-    return res.ok ? String((await res.json()).text ?? '') : '';
+    this.listener.stop();
   }
 
   private async fetchSpeech(text: string, lang: Lang): Promise<string> {
@@ -161,9 +111,4 @@ export class WebVoice {
       speechSynthesis.speak(u);
     });
   }
-}
-
-function speechRecognitionCtor(): (new () => Recognition) | null {
-  const w = globalThis as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }

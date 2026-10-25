@@ -122,6 +122,8 @@ const wisp = mount(
     siteName: 'QuickBasket',
     character: 'sprout',
     welcome: true,
+    // The demo's own Wisp server: free open-source speech to text, so the mic works in every browser.
+    ai: { endpoint: '/wisp' },
     voice: { mode: 'browser', talk: true },
     pages: [
       { name: ['Fashion shop', 'dresses', 'Petal and Thread', { hinglish: 'kapde wala page' }], url: '/' },

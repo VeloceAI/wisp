@@ -55,3 +55,4 @@ export function serve(opts: WispProxyOptions & { port?: number; path?: string })
 }
 
 export { createWispHandler };
+export { whisper, type Transcriber } from './local-stt';

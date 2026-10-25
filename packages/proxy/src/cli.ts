@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
 import type { ProviderName } from '@veloceai/wisp-core';
-import { fileAudioCache, serve } from './node';
+import { fileAudioCache, serve, whisper } from './node';
 
 const env = process.env;
 const knowledge = env.WISP_KNOWLEDGE ? JSON.parse(readFileSync(env.WISP_KNOWLEDGE, 'utf8')) : undefined;
@@ -22,6 +22,11 @@ serve({
   guideName: env.WISP_GUIDE_NAME,
   siteName: env.WISP_SITE_NAME,
   knowledge: knowledge && { faq: knowledge.faq, content: knowledge.content },
-  voice: { enabled: env.WISP_VOICE === 'on', cache: fileAudioCache(env.WISP_AUDIO_DIR ?? '.wisp-cache/audio') },
+  voice: {
+    enabled: env.WISP_VOICE === 'on',
+    cache: fileAudioCache(env.WISP_AUDIO_DIR ?? '.wisp-cache/audio'),
+    // WISP_LISTEN=whisper-base (or -tiny / -small): free, open-source speech to text on this server.
+    listen: env.WISP_LISTEN?.startsWith('whisper') ? whisper((env.WISP_LISTEN.split('-')[1] as 'base') ?? 'base', { preload: true }) : undefined,
+  },
 });
 console.log(`wisp-proxy on http://localhost:${port}${path} using ${env.WISP_PROVIDER ?? 'mock'}`);

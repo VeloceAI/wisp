@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CharacterAnimator, buildScene, defineCharacter, designFromText, paletteFrom, type SceneNode } from '../src/index';
+import { CharacterAnimator, baseVocabulary, buildScene, correctTranscript, defineCharacter, designFromText, paletteFrom, type SceneNode } from '../src/index';
 
 const find = (nodes: SceneNode[], key: string): SceneNode | undefined => {
   for (const n of nodes) {
@@ -43,5 +43,19 @@ describe('logo mode', () => {
     expect(defineCharacter({ logo: { src: 'data:text/html;base64,PHNjcmlwdD4=' } }).logo).toBeNull();
     expect(defineCharacter({ logo: { src: 'data:image/png;base64,iVBORw0KGgo=' } }).logo?.fit).toBe('circle');
     expect(defineCharacter({ logo: { src: '/brand/logo.svg' } }).logo?.src).toBe('/brand/logo.svg');
+  });
+});
+
+
+describe('speech correction', () => {
+  const v = baseVocabulary();
+  it('fixes misheard product and shopping words', () => {
+    expect(correctTranscript('Put the first one in the card.', v)).toBe('Put the first one in the cart.');
+    expect(correctTranscript('Give me Anian.', v)).toBe('Give me onion.');
+    expect(correctTranscript('add two kilo potatos and mlk', v)).toBe('add two kilo potato and milk');
+  });
+  it('leaves ordinary words alone', () => {
+    expect(correctTranscript('I want three of the first ones', v)).toBe('I want three of the first ones');
+    expect(correctTranscript('दो किलो प्याज़ डाल दो', v)).toBe('दो किलो प्याज़ डाल दो');
   });
 });

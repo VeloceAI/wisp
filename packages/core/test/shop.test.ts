@@ -31,6 +31,13 @@ describe('parseShop', () => {
     ]);
   });
 
+  it('treats an amount with no verb as an order', () => {
+    expect(p('2 kilo tomato and milk please')).toEqual([
+      { kind: 'add', query: 'tomato', qty: 2, unit: 'kg' },
+      { kind: 'add', query: 'milk', qty: undefined, unit: undefined },
+    ]);
+  });
+
   it('reads quantities, changes and removals', () => {
     expect(p('make it 4')).toEqual([{ kind: 'setQty', qty: 4 }]);
     expect(p('one more')).toEqual([{ kind: 'setQty', delta: 1, query: undefined }]);

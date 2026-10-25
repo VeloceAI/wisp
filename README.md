@@ -262,6 +262,17 @@ The eight extra languages are first drafts and need a quick check by a native sp
 
 In talk mode it keeps listening after the page changes, so people can move around and shop by voice alone. Works in all 11 languages, without AI.
 
+## Listening that works everywhere (free and open source)
+
+| Where | How Wisp listens | Cost | Download for the user |
+|---|---|---|---|
+| Any website (Chrome, Firefox, Safari, Edge) and desktop apps (Electron, Tauri) | The browser only records; your Wisp server transcribes with open-source **Whisper** | Free | None |
+| Chrome, Edge, Safari with no Wisp server | The browser's own recogniser | Free | None |
+| No server, no built-in recogniser | Whisper tiny inside the browser, opt-in with `"voice": { "offline": true }` | Free | ~40 MB once, cached |
+| iOS and Android apps (Expo, coming) | The phone's own recogniser | Free | None |
+
+Turn on server listening with `WISP_LISTEN=whisper-base npx wisp-proxy` (or `voice: { enabled: true, listen: whisper('base', { preload: true }) }` in code). The model (~80 MB) loads once on the server. `whisper-tiny` is faster; `whisper-small` is the most accurate, and needs a strong server. Recording stops by itself when the person stops talking, and slightly misheard product and page words are fixed using what's on the page ("card" → "cart", "aniam" → "onion"). Check it end to end with `npm run check:stt` (synthetic voices through the real server) and `npm run check:mic` (a spoken clip fed into Chrome's microphone).
+
 ## Bring your own AI key
 
 Wisp works without AI. To let it answer in its own words, run the tiny proxy on your server; the key never reaches visitors' browsers.

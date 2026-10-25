@@ -29,6 +29,7 @@ import { cssEscape, safeQueryAll, watchSections } from './watch/sections';
 import { browserStore } from './storage';
 import { connectAI, visitorId } from './ai';
 import { WebVoice } from './voice';
+import { vocabulary } from './listen/vocabulary';
 import { TalkLoop } from './talk';
 import { PageReader } from './page/reader';
 import { DomDriver } from './actions/driver';
@@ -63,6 +64,8 @@ export interface WispInstance {
   registerShop(shop: ShopAdapter): void;
   /** Starts or stops talk mode. */
   talk(): void;
+  /** Listens once (any browser) and returns what was heard. */
+  listen(): Promise<string>;
   stop(): void;
   openChat(): void;
   startTour(): void;
@@ -100,7 +103,13 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
   const voice =
     config.voice === false
       ? null
-      : new WebVoice({ mode: config.voice?.mode ?? 'browser', endpoint: config.ai?.endpoint, visitor: visitorId(store), clips: config.voice?.clips });
+      : new WebVoice({
+          mode: config.voice?.mode ?? 'browser',
+          endpoint: config.ai?.endpoint,
+          visitor: visitorId(store),
+          clips: config.voice?.clips,
+          listen: { mode: config.voice?.listen, offline: config.voice?.offline, vocabulary: () => vocabulary(guide, config) },
+        });
   const def = guide.character;
   const corner: Corner = config.position ?? 'bottom-right';
   const motionQuery = win.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -363,6 +372,7 @@ export function mount(config: GuideConfig = {}, opts: MountOptions = {}): WispIn
     run: (instruction) => actions.handle(instruction),
     registerAction: (name, handler) => void driver.handlers.set(name, handler),
     registerShop,
+    listen: () => (voice ? voice.listen(guide.getState().lang) : Promise.resolve('')),
     talk: () => {
       guide.dispatch({ type: 'chat-open' });
       talkLoop?.toggle();

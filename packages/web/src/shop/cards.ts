@@ -25,8 +25,8 @@ function hidden(el: Element): boolean {
 }
 
 /**
- * Finds product cards on any shop page, in reading order: a card is the biggest box around one
- * "Add" button that also shows a price. `data-wisp-product` marks cards explicitly when a site wants to.
+ * Finds product cards on any shop page, in reading order: a card is the smallest box around one
+ * "Add" button that also shows a price and a name. `data-wisp-product` marks cards explicitly when a site wants to.
  */
 export function findCards(root: Document | Element, skip?: Element): Card[] {
   const marked = [...root.querySelectorAll('[data-wisp-product]')];
@@ -40,11 +40,15 @@ function guessContainers(root: Document | Element, skip?: Element): Element[] {
   );
   const out: Element[] = [];
   for (const b of buttons) {
+    // The card is the smallest box around the Add button that shows both a price and a name.
     let card: Element | null = null;
     for (let el = b.parentElement; el && el !== root && el.tagName !== 'BODY'; el = el.parentElement) {
       const adds = [...el.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]')].filter((x) => ADD_RE.test(label(x)));
       if (adds.length > 1) break;
-      if (PRICE_RE.test(el.textContent ?? '')) card = el;
+      if (PRICE_RE.test(el.textContent ?? '') && readCard(el).product.name) {
+        card = el;
+        break;
+      }
     }
     if (card && !out.includes(card)) out.push(card);
   }

@@ -135,19 +135,23 @@ export function parseShop(text: string, w: ShopWordPack): ShopIntent[] {
   const verb = parsed.find((p) => p.intent !== 'none' && ['add', 'find', 'remove'].includes(p.intent.kind))?.intent as
     | Extract<ShopIntent, { kind: 'add' | 'find' | 'remove' }>
     | undefined;
+  // "2 kilo tomato and milk please": an amount with a unit and no verb still means "add".
+  const implied: ShopIntent | undefined =
+    !verb && parsed.some((p) => p.intent === 'none' && takeQty(p.cl, w).unit) ? { kind: 'add', query: '' } : undefined;
+  const useVerb = (verb ?? implied) as Extract<ShopIntent, { kind: 'add' | 'find' | 'remove' }> | undefined;
   const out: ShopIntent[] = [];
   for (const { cl, intent } of parsed) {
     if (intent !== 'none') {
-      if ((intent.kind === 'add' || intent.kind === 'find') && !intent.query && verb && verb !== intent) continue;
+      if ((intent.kind === 'add' || intent.kind === 'find') && !intent.query && useVerb && useVerb !== intent) continue;
       out.push(intent);
       continue;
     }
-    if (!verb) return [];
+    if (!useVerb) return [];
     const qty = takeQty(cl, w);
     const query = cleanQuery(qty.c, w);
     if (!query) continue;
-    if (verb.kind === 'add') out.push({ kind: 'add', query, qty: qty.qty, unit: qty.unit });
-    else if (verb.kind === 'find') out.push({ kind: 'find', query });
+    if (useVerb.kind === 'add') out.push({ kind: 'add', query, qty: qty.qty, unit: qty.unit });
+    else if (useVerb.kind === 'find') out.push({ kind: 'find', query });
     else out.push({ kind: 'remove', query });
   }
   return out;

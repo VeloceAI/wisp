@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { toNodeListener } from '../../packages/proxy/src/node';
 import { createWispHandler } from '../../packages/proxy/src/handler';
+import { whisper } from '../../packages/proxy/src/local-stt';
 
 const pkg = (p: string) => fileURLToPath(new URL(`../../packages/${p}/src/index.ts`, import.meta.url));
 const bundle = fileURLToPath(new URL('../../packages/web/dist/wisp.js', import.meta.url));
@@ -33,7 +34,8 @@ const proxy = (): Plugin => ({
         provider: { provider: (env.WISP_PROVIDER as never) ?? 'mock', apiKey: env.WISP_API_KEY, model: env.WISP_MODEL },
         guideName: 'Wisp',
         siteName: 'Petal & Thread',
-        voice: { enabled: true },
+        // Free, open-source speech to text on this server (Whisper base, downloaded once on first use).
+        voice: { enabled: true, listen: whisper((env.WISP_STT_MODEL as 'base') ?? 'base', { preload: true }) },
         perVisitor: 50,
       }),
     );

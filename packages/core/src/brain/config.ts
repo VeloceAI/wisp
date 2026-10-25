@@ -95,7 +95,17 @@ export interface GuideConfig {
    * Voice is off until the visitor turns it on. `false` hides the option.
    * "browser" uses the built-in voice; "ai" uses the proxy's natural voice and falls back to the browser.
    */
-  voice?: false | { mode?: 'browser' | 'ai'; clips?: Record<string, string>; talk?: boolean };
+  voice?:
+    | false
+    | {
+        mode?: 'browser' | 'ai';
+        clips?: Record<string, string>;
+        talk?: boolean;
+        /** How to listen: "auto" (server, then the browser's own, then offline), or force one. */
+        listen?: 'auto' | 'server' | 'device' | 'offline';
+        /** Allow the ~40 MB in-browser model when nothing else can listen. */
+        offline?: boolean;
+      };
   /** Voice and chat shopping settings; the store itself is passed with `registerShop`. */
   shop?: ShopConfig;
   /** Pages people can ask for by name ("go to my orders"), even when they aren't linked on screen. */

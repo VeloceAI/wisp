@@ -126,3 +126,8 @@ export function toCatalogQuery(query: string, synonyms: Record<string, string> =
 export function looksUntranslated(query: string): boolean {
   return /[^\u0000-ɏ\s\d]/.test(query);
 }
+
+/** Every catalogue word and local name, for speech correction. */
+export function catalogWords(): string[] {
+  return [...Object.keys(DICT), ...LOOKUP.keys()];
+}

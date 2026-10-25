@@ -37,3 +37,4 @@ export * from './nav/handler';
 export * from './character/color';
 export { designFromText } from './character/designer';
 export * from './ai/design-service';
+export * from './voice/correct';

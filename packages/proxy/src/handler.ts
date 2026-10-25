@@ -16,6 +16,7 @@ import {
   type ProviderConfig,
 } from '@veloceai/wisp-core';
 import { MemoryAudioCache, sha256, type AudioCache } from './audio-cache';
+import { pcm16ToFloat, pcmToWav, type Transcriber } from './local-stt';
 
 export interface WispProxyOptions {
   provider: ProviderConfig | AIProvider;
@@ -29,7 +30,14 @@ export interface WispProxyOptions {
   siteName?: string;
   /** Facts kept on the server, so answers don't depend on what the browser sends. */
   knowledge?: { faq?: FaqEntry[]; content?: ContentDoc[] };
-  voice?: { enabled: boolean; cache?: AudioCache; maxChars?: number; voice?: string };
+  voice?: {
+    enabled: boolean;
+    cache?: AudioCache;
+    maxChars?: number;
+    voice?: string;
+    /** Free speech-to-text on this server, e.g. `whisper('base')` from `@veloceai/wisp-proxy/node`. */
+    listen?: Transcriber;
+  };
   /** Trust x-forwarded-for for the client IP (only behind your own load balancer). */
   trustProxy?: boolean;
   onTrack?: (event: { kind: string; visitor: string; [k: string]: unknown }) => void;
@@ -45,6 +53,9 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
   const provider = 'chat' in opts.provider ? opts.provider : createProvider(opts.provider);
   const visitors = new CallLimiter(opts.perVisitor ?? 20);
   const ips = new CallLimiter(opts.perIp ?? 60);
+  // Local transcription costs no API money, so it gets its own, roomier limit.
+  const listens = new CallLimiter(300);
+  const canListen = !!(opts.voice?.enabled && (opts.voice.listen || provider.transcribe));
   const cache = opts.voice?.cache ?? new MemoryAudioCache();
   const knowledge = opts.knowledge ? new FaqChat(opts.knowledge.faq ?? [], opts.knowledge.content ?? [], new Lines()) : null;
 
@@ -67,7 +78,7 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
     if (!originAllowed(req)) return json({ error: 'origin' }, 403);
     if (route === 'health' && req.method === 'GET') {
-      return json({ ok: true, provider: provider.id, voice: !!(opts.voice?.enabled && provider.speak), listen: !!(opts.voice?.enabled && provider.transcribe) }, 200, headers);
+      return json({ ok: true, provider: provider.id, voice: !!(opts.voice?.enabled && provider.speak), listen: canListen }, 200, headers);
     }
     if (req.method !== 'POST') return json({ error: 'not found' }, 404, headers);
 
@@ -88,7 +99,7 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
       }
       if (route === 'translate') return json(await translate(await readJson(req), spend), 200, headers);
       if (route === 'tts' && opts.voice?.enabled && provider.speak) return await tts(await readJson(req), headers, spend);
-      if (route === 'stt' && opts.voice?.enabled && provider.transcribe) return await stt(req, headers, spend);
+      if (route === 'stt' && canListen) return await stt(req, headers, spend, visitor);
       return json({ error: 'not found' }, 404, headers);
     } catch (err) {
       if (err instanceof OverLimit) return json({ error: 'limit' }, 429, headers);
@@ -161,12 +172,23 @@ export function createWispHandler(opts: WispProxyOptions): WispHandler {
     return new Response(audio, { headers: { ...headers, 'content-type': 'audio/mpeg', 'cache-control': 'public, max-age=31536000, immutable' } });
   }
 
-  async function stt(req: Request, headers: Record<string, string>, spend: () => void) {
+  /** Browsers send 16 kHz 16-bit PCM (`audio/pcm`); older clients may send a recorded file. */
+  async function stt(req: Request, headers: Record<string, string>, spend: () => void, visitor: string) {
     const lang = new URL(req.url).searchParams.get('lang') ?? undefined;
-    const blob = await req.blob();
-    if (blob.size === 0 || blob.size > 5_000_000) throw new BadRequest('audio size');
-    spend();
-    const text = await withTimeout(opts.timeoutMs ?? 8000, (signal) => provider.transcribe!(blob, { lang, signal }));
+    const pcm = (req.headers.get('content-type') ?? '').startsWith('audio/pcm');
+    const body = await req.arrayBuffer();
+    if (body.byteLength === 0 || body.byteLength > (pcm ? 16000 * 2 * 20 : 5_000_000)) throw new BadRequest('audio size');
+    const local = opts.voice?.listen;
+    let text: string;
+    if (pcm && local) {
+      if (!listens.take(visitor)) throw new OverLimit();
+      text = await withTimeout(Math.max(opts.timeoutMs ?? 8000, 60000), () => local(pcm16ToFloat(body), lang));
+    } else {
+      if (!provider.transcribe) throw new BadRequest('no speech engine');
+      spend();
+      const blob = pcm ? pcmToWav(body) : new Blob([body]);
+      text = await withTimeout(opts.timeoutMs ?? 8000, (signal) => provider.transcribe!(blob, { lang, signal }));
+    }
     return json({ text: redact(text) }, 200, headers);
   }
 }
